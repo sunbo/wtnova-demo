@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经营数据看板</title>
+  <style>
+    :root{
+      --bg:#fafafa;
+      --panel:#ffffff;
+      --panel-soft:#f8fafc;
+      --line:#dde5ef;
+      --line-strong:#cfd9e5;
+      --text:#0f172a;
+      --sub:#526077;
+      --muted:#8c97aa;
+      --blue:#0052d9;
+      --cyan:#2f7bff;
+      --green:#79a8ff;
+      --amber:#d97706;
+      --red:#dc2626;
+      --purple:#003a99;
+      --shadow:0 16px 40px -28px rgba(15,23,42,.28);
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.42;
+      font-size:12px;
+    }
+
+    .page{max-width:1660px;margin:0 auto;padding:12px 12px 24px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+      min-height:20px;padding:0 0 5px;margin-bottom:6px;border-bottom:1px solid var(--line)
+    }
+    .crumb,.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .crumb{font-size:11px;color:var(--sub);line-height:1.1}
+    .crumb .current{font-weight:800;color:var(--text)}
+
+    .top-metric{
+      background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 10px;
+      min-height:72px;box-shadow:0 1px 2px rgba(15,23,42,.05);transition:background-color .18s ease,border-color .18s ease
+    }
+    .top-metric .label,.metric-box .label,.viz-title,.subline,.list-meta,.modal-sub{font-size:10px;color:var(--sub)}
+    .top-metric .value{margin-top:3px;font-size:18px;font-weight:800;line-height:1.05}
+    .top-metric .desc{margin-top:4px;font-size:10px;color:var(--muted);line-height:1.4}
+    .blue{color:var(--blue)} .green{color:var(--green)} .amber{color:var(--amber)} .red{color:var(--red)} .purple{color:var(--purple)}
+
+    .dept-grid{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px
+    }
+    .dept-card{
+      background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;
+      box-shadow:0 1px 2px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px;min-height:0;transition:background-color .18s ease,border-color .18s ease
+    }
+
+    .dept-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+    .dept-title{display:flex;flex-direction:column;gap:0}
+    .dept-title h3{font-size:13px;font-weight:800}
+    .dept-actions{display:flex;align-items:center;gap:6px}
+    .status{
+      display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
+      font-size:10px;font-weight:700;white-space:nowrap;background:#f3f6fa
+    }
+    .status.good{color:var(--green)}
+    .status.warn{color:var(--amber)}
+    .status.risk{color:var(--red)}
+    .more-btn{
+      display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;
+      border:1px solid rgba(37,99,235,.18);border-radius:999px;background:rgba(37,99,235,.05);color:var(--blue);cursor:pointer;
+      transition:all .18s ease
+    }
+    .more-btn:hover{border-color:var(--line-strong);color:var(--blue);background:#f5f5f5}
+    .more-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+    .metric-grid-4,.metric-grid-3,.metric-grid-2{
+      display:grid;gap:6px
+    }
+    .metric-grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .metric-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .metric-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .metric-box{
+      background:var(--panel-soft);border:1px solid var(--line);border-radius:11px;padding:7px;transition:background-color .18s ease,border-color .18s ease
+    }
+    .metric-box .value{font-size:15px;font-weight:800;line-height:1.05;margin-top:3px}
+    .metric-box .desc{margin-top:3px;font-size:10px;color:var(--muted);line-height:1.35}
+
+    .dept-card.overview .metric-grid-4{
+      flex:1;align-content:stretch;grid-auto-rows:minmax(86px,1fr)
+    }
+    .dept-card.overview .top-metric{
+      min-height:0;height:100%;display:flex;flex-direction:column;justify-content:center
+    }
+
+    .viz-grid-2,.viz-grid-mix{display:grid;gap:6px;min-height:0}
+    .viz-grid-2{grid-template-columns:1fr 1fr}
+    .viz-grid-mix{grid-template-columns:1.15fr .85fr}
+    .viz-panel{
+      background:var(--panel-soft);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:0;transition:background-color .18s ease,border-color .18s ease
+    }
+    .viz-title{margin-bottom:6px}
+
+    .bars{display:flex;align-items:flex-end;gap:6px;height:76px}
+    .bars.tall{height:132px}
+    .bar-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+    .bar-item .num{font-size:9px;font-weight:700;color:var(--text);margin-bottom:2px}
+    .bar-item .bar{width:100%;max-width:26px;border-radius:7px 7px 3px 3px;min-height:8px;background:#cbd5e1}
+    .bar-item .lab{margin-top:3px;font-size:8px;color:var(--muted);line-height:1.2;text-align:center}
+
+    .progress-list,.stack-list,.funnel-list,.risk-list,.opportunity-list,.vacancy-list,.project-board,.focus-list{display:flex;flex-direction:column;gap:7px}
+    .progress-row,.stack-row,.funnel-row,.vacancy-row{
+      display:grid;grid-template-columns:72px 1fr 38px;align-items:center;gap:8px
+    }
+    .progress-row .lab,.stack-row .lab,.funnel-row .lab,.vacancy-row .lab{font-size:10px;color:var(--sub)}
+    .progress-row .num,.stack-row .num,.funnel-row .num,.vacancy-row .num{font-size:10px;color:var(--sub);text-align:right}
+    .track,.stack-track{
+      width:100%;height:8px;border-radius:999px;background:#e6edf5;overflow:hidden
+    }
+    .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+    .fill.purple{background:linear-gradient(90deg,var(--purple),var(--blue))}
+    .fill.green{background:linear-gradient(90deg,var(--green),#b9d3ff)}
+    .fill.amber{background:linear-gradient(90deg,var(--amber),#f0a43c)}
+    .fill.red{background:linear-gradient(90deg,var(--red),#ef6b6b)}
+    .stack-fill.red{background:var(--red)}
+    .stack-fill.amber{background:var(--amber)}
+    .stack-fill.cyan{background:var(--cyan)}
+    .stack-fill.green{background:var(--green)}
+
+    .list-item,.risk-item,.opportunity-item,.vacancy-item,.project-row{
+      display:flex;justify-content:space-between;gap:10px;padding:8px 9px;border-radius:11px;
+      background:#fff;border:1px solid var(--line);transition:background-color .18s ease,border-color .18s ease
+    }
+    .list-item strong,.risk-item strong,.opportunity-item strong,.vacancy-item strong,.project-row strong{font-size:11px;color:var(--text)}
+    .list-item span,.risk-item span,.opportunity-item span,.vacancy-item span,.project-row span{font-size:10px;color:var(--sub);line-height:1.45}
+    .risk-tag,.project-tag,.vacancy-tag{
+      font-size:10px;font-weight:800;white-space:nowrap;align-self:flex-start
+    }
+    .risk-tag.high,.project-tag.risk,.vacancy-tag.high{color:var(--red)}
+    .risk-tag.mid,.project-tag.warn,.vacancy-tag.mid{color:var(--amber)}
+    .risk-tag.low,.project-tag.good,.vacancy-tag.low{color:var(--blue)}
+
+    .donut-wrap{display:flex;gap:10px;align-items:center}
+    .donut{
+      width:92px;height:92px;border-radius:50%;position:relative;display:grid;place-items:center;flex-shrink:0
+    }
+    .donut::after{content:"";position:absolute;inset:10px;border-radius:50%;background:#fff}
+    .donut-core{position:relative;z-index:1;text-align:center}
+    .donut-core .big{font-size:17px;font-weight:800;line-height:1.05}
+    .donut-core .small{margin-top:3px;font-size:10px;color:var(--sub)}
+    .legend{display:flex;flex-direction:column;gap:7px;flex:1}
+    .legend-row{display:grid;grid-template-columns:10px 1fr auto;gap:7px;align-items:center;font-size:10px;color:var(--sub)}
+    .dot{width:10px;height:10px;border-radius:50%}
+
+    .project-board{gap:6px}
+    .project-row{padding:8px 8px}
+    .project-row .main{display:flex;flex-direction:column;gap:3px;flex:1}
+    .inline-meta{display:flex;flex-wrap:wrap;gap:8px}
+    .inline-meta span{font-size:10px;color:var(--muted)}
+
+    .delivery-grid{align-items:stretch}
+    .delivery-chart{display:flex;flex-direction:column}
+    .delivery-chart .bars.tall{flex:1;height:100%;min-height:176px}
+
+    .solution-layout{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+    .solution-top{flex:1;align-items:stretch}
+    .solution-top>.viz-panel{display:flex;flex-direction:column;min-height:0}
+    .solution-top .opportunity-list{flex:1}
+    .solution-top .donut-wrap{flex:1;min-height:176px;justify-content:center}
+    .solution-top .donut{width:120px;height:120px}
+
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(15,23,42,.34);backdrop-filter:blur(4px);
+      display:none;align-items:center;justify-content:center;z-index:999
+    }
+    .modal-overlay.open{display:flex}
+    .modal{
+      width:min(1500px,96vw);height:min(92vh,1000px);background:#fff;border:1px solid var(--line);
+      border-radius:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden
+    }
+    .modal-head{
+      display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;
+      border-bottom:1px solid var(--line);background:#fbfdff
+    }
+    .modal-title{font-size:13px;font-weight:800}
+    .modal-actions{display:flex;align-items:center;gap:8px}
+    .modal-link{
+      display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;
+      background:#eef4fb;color:var(--text);text-decoration:none;font-size:10px;font-weight:700;transition:background-color .18s ease,border-color .18s ease
+    }
+    .modal-close{
+      width:28px;height:28px;border:none;border-radius:999px;background:#eef2f7;color:var(--text);
+      font-size:16px;cursor:pointer;transition:background-color .18s ease
+    }
+    .modal-frame{flex:1;background:#fff}
+    .modal-frame iframe{width:100%;height:100%;border:none;background:#fff}
+
+    @media (max-width:1080px){
+      .metric-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .viz-grid-2,.viz-grid-mix{grid-template-columns:1fr}
+      .solution-top .donut{width:104px;height:104px}
+    }
+    @media (max-width:760px){
+      .metric-grid-3,.metric-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .dept-grid{grid-template-columns:1fr}
+      .page{padding:10px}
+      .modal{width:98vw;height:94vh}
+    }
+    @media (max-width:560px){
+      .metric-grid-4,.metric-grid-3,.metric-grid-2{grid-template-columns:1fr}
+    }
+
+    .top-metric,
+    .dept-card,
+    .metric-box,
+    .viz-panel,
+    .list-item,
+    .risk-item,
+    .opportunity-item,
+    .vacancy-item,
+    .project-row,
+    .modal {
+      border-radius:12px !important;
+    }
+
+    .top-metric:hover,
+    .dept-card:hover,
+    .metric-box:hover,
+    .viz-panel:hover,
+    .list-item:hover,
+    .risk-item:hover,
+    .opportunity-item:hover,
+    .vacancy-item:hover,
+    .project-row:hover,
+    .modal-link:hover,
+    .modal-close:hover {
+      background:#f5f5f5 !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="page"></div>
+  <script>
+    const departments = {
+      finance: {
+        key: "finance",
+        name: "财务情况",
+        file: "财务部数据看板.html",
+        status: { text: "应收与现金节奏需持续盯防", tone: "warn" },
+        metrics: [
+          { label: "技术服务收入", value: "286万", desc: "同比 +12.5%" },
+          { label: "净利润", value: "68万", desc: "净利率 23.8%" },
+          { label: "可用资金", value: "156万", desc: "净现金流 +23万" },
+          { label: "逾期应收", value: "86万", desc: "占应收总额 20.1%" }
+        ],
+        bars: [
+          { label: "收入", value: 286 },
+          { label: "毛利", value: 142 },
+          { label: "成本", value: 144 },
+          { label: "现金", value: 156 }
+        ],
+        risks: [
+          { title: "大额逾期应收", desc: "东方锆炉逾期 45 天，金额 35 万元", level: "high" },
+          { title: "资金平衡预警", desc: "下月流入 150 万，流出 145 万", level: "mid" },
+          { title: "费用控制良好", desc: "本期费用 194 万，低于预算 210 万", level: "low" }
+        ]
+      },
+      product: {
+        key: "product",
+        name: "产品经营",
+        file: "产品研发部数据看板.html",
+        status: { text: "路标推进中，供应链平台与 OpenClaw 需重点关注", tone: "warn" },
+        metrics: [
+          { label: "路标达成率", value: "78%", desc: "4 条产品线中 3 条按计划推进" },
+          { label: "在途商机", value: "23个", desc: "预计总额 4,360 万" },
+          { label: "关联项目营收", value: "2,180万", desc: "8 个重点项目绑定产品交付" },
+          { label: "高优 Bug", value: "9个", desc: "阻塞 2，严重 7" }
+        ],
+        roadmap: [
+          { label: "PMS", value: 82 },
+          { label: "OpenClaw", value: 68 },
+          { label: "供应链", value: 54 },
+          { label: "客服平台", value: 76 }
+        ],
+        bugs: [
+          { label: "阻塞级", value: 2, max: 38, cls: "red" },
+          { label: "严重级", value: 7, max: 38, cls: "amber" },
+          { label: "一般级", value: 29, max: 38, cls: "cyan" },
+          { label: "关闭率", value: 86, max: 100, cls: "green", unit: "%" }
+        ],
+        team: [
+          { label: "前端", value: "9人", desc: "可支撑 4 条产品线" },
+          { label: "后端", value: "13人", desc: "交付绑定项目较多" },
+          { label: "平均人效", value: "91%", desc: "客服平台与 PMS 最优" }
+        ]
+      },
+      delivery: {
+        key: "delivery",
+        name: "项目交付",
+        file: "交付部数据看板.html",
+        status: { text: "项目整体推进良好，资源与回款需双线盯住", tone: "warn" },
+        metrics: [
+          { label: "在建项目", value: "6个", desc: "整体进度良好" },
+          { label: "交付利用率", value: "75%", desc: "建议提升至 80%+" },
+          { label: "累计回款", value: "580万", desc: "合同总额 1,200 万" },
+          { label: "外采占比", value: "35%", desc: "当前仍在合理区间" }
+        ],
+        projects: [
+          { title: "东方锆炉 APS", meta: ["进度 78%", "回款贡献高", "5 月验收"], tone: "good" },
+          { title: "核电 MES", meta: ["进度 72%", "资源偏紧", "6 月交付"], tone: "warn" },
+          { title: "风电计划系统", meta: ["进度 65%", "人员可能不足", "7 月里程碑"], tone: "warn" },
+          { title: "金航数码项目", meta: ["需求频繁变化", "待确认范围", "风险上升"], tone: "risk" }
+        ],
+        resources: [
+          { label: "APS", value: 120 },
+          { label: "MES", value: 85 },
+          { label: "风电", value: 60 },
+          { label: "PMO", value: 45 },
+          { label: "外包", value: 180 },
+          { label: "金航", value: 30 }
+        ]
+      },
+      solution: {
+        key: "solution",
+        name: "售前商机",
+        file: "解决方案部数据看板.html",
+        status: { text: "签单与商机储备并行推进，人力缺口仍在", tone: "good" },
+        metrics: [
+          { label: "年度应收目标", value: "2,000万", desc: "定制交付占比最高" },
+          { label: "年度签单目标", value: "1,500万", desc: "已签合同 800 万" },
+          { label: "商机盘点", value: "500万", desc: "已有 300 万，缺口 200 万" }
+        ],
+        donut: {
+          total: "800万",
+          subtitle: "已签合同",
+          segments: [
+            { label: "定制交付", value: 500, color: "#0052d9" },
+            { label: "资源整合", value: 200, color: "#2f7bff" },
+            { label: "产品/ODM", value: 100, color: "#79a8ff" }
+          ]
+        },
+        opportunities: [
+          { title: "东方锆炉数字化工厂", desc: "500 万 | 赢单率 80% | 预计 2026-06" },
+          { title: "中车风电 MES 系统", desc: "350 万 | 赢单率 65% | 预计 2026-07" },
+          { title: "国电投核电项目", desc: "280 万 | 赢单率 50% | 预计 2026-08" }
+        ]
+      },
+      hr: {
+        key: "hr",
+        name: "人力资源",
+        file: "人力资源数据看板.html",
+        status: { text: "在编稳定，但关键岗位招聘推进偏慢", tone: "risk" },
+        metrics: [
+          { label: "在编总人数", value: "93人", desc: "员工关系看板当前在编" },
+          { label: "招聘需求", value: "10人", desc: "共 8 个岗位在招" },
+          { label: "编制缺口", value: "13人", desc: "产品研发部缺口 5 人最高" },
+          { label: "Offer / 入职", value: "0 / 0", desc: "招聘推进仍需提速" }
+        ],
+        funnel: [
+          { label: "需求发布", value: 100, text: "8 岗位已发布" },
+          { label: "简历储备", value: 20, text: "仅 2 份有效简历" },
+          { label: "一面推进", value: 0, text: "暂无实质推进" },
+          { label: "Offer / 入职", value: 0, text: "仍待启动" }
+        ],
+        vacancies: [
+          { title: "产品研发部", desc: "缺口 5 人，前后端与 QA 均有需求", level: "high" },
+          { title: "解决方案部", desc: "缺口 3 人，售前顾问优先级最高", level: "mid" },
+          { title: "交付部", desc: "缺口 2 人，项目实施补位压力增加", level: "mid" },
+          { title: "财务与综合", desc: "缺口 1 人，当前影响相对可控", level: "low" }
+        ]
+      }
+    };
+
+    const topMetrics = [
+      { label: "企业现金安全垫", value: "156万", cls: "blue", desc: "未来 3.2 个月总体安全" },
+      { label: "重点经营风险", value: "4类", cls: "amber", desc: "应收、路线、交付、人力" },
+      { label: "重点项目绑定产品", value: "8个", cls: "purple", desc: "预计营收 2,180 万" },
+      { label: "交付项目总量", value: "6个", cls: "green", desc: "在建项目整体良好" },
+      { label: "覆盖部门", value: "5个", cls: "blue", desc: "财务 / 产品 / 交付 / 售前 / 人力" },
+      { label: "产品侧在途商机", value: "23个", cls: "purple", desc: "预计总额 4,360 万" },
+      { label: "交付累计回款", value: "580万", cls: "green", desc: "回款率 48%" },
+      { label: "当前编制缺口", value: "13人", cls: "amber", desc: "产品研发部缺口最高" }
+    ];
+
+    const dashboardCards = [
+      {
+        key: "overview",
+        name: "缁忚惀鏁版嵁",
+        status: { text: "8 涓叧閿寚鏍囧凡鏁村悎鍒扮粺涓€鐪嬫澘", tone: "good" }
+      },
+      departments.finance,
+      departments.product,
+      departments.solution,
+      departments.delivery,
+      departments.hr
+    ];
+
+    dashboardCards[0].name = "经营数据";
+    dashboardCards[0].status.text = "";
+
+    departments.solution.name = "售前商机";
+    departments.solution.file = "解决方案部数据看板.html";
+    departments.solution.status.text = "签单与商机储备并行推进，人力缺口仍在";
+    departments.solution.metrics = [
+      { label: "年度收目标", value: "2,000万", desc: "定制交付占比最高" },
+      { label: "年度签单目标", value: "1,500万", desc: "已签合同 800 万" },
+      { label: "商机盘点", value: "500万", desc: "已有 300 万，缺口 200 万" }
+    ];
+    departments.solution.donut = {
+      total: "800万",
+      subtitle: "已签合同",
+      segments: [
+        { label: "定制交付", value: 500, color: "#0052d9" },
+        { label: "资源整合", value: 200, color: "#2f7bff" },
+        { label: "产品/ODM", value: 100, color: "#79a8ff" }
+      ]
+    };
+    departments.solution.opportunities = [
+      { title: "东方锆联数字化工厂", desc: "500 万 | 赢单率 80% | 预计 2026-06" },
+      { title: "中车风电 MES 系统", desc: "350 万 | 赢单率 65% | 预计 2026-07" },
+      { title: "国电投核电项目", desc: "280 万 | 赢单率 50% | 预计 2026-08" },
+      { title: "华新材料供应链平台", desc: "220 万 | 赢单率 55% | 预计 2026-07" },
+      { title: "智造云客服中台", desc: "180 万 | 赢单率 45% | 预计 2026-09" }
+    ];
+
+    const app = document.getElementById("app");
+    let activeDetail = null;
+
+    function getBarMax(items){
+      return Math.max(...items.map(item => item.value), 1);
+    }
+
+    function barChart(items, palette, variant = ""){
+      const max = getBarMax(items);
+      return `<div class="bars ${variant}">${items.map((item, idx) => `
+        <div class="bar-item">
+          <div class="num">${item.value}${item.unit || ""}</div>
+          <div class="bar" style="height:${Math.max(item.value / max * 100, 10)}%;background:${palette[idx % palette.length]}"></div>
+          <div class="lab">${item.label}</div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function progressList(items, fillClass = "purple"){
+      return `<div class="progress-list">${items.map(item => `
+        <div class="progress-row">
+          <div class="lab">${item.label}</div>
+          <div class="track"><div class="fill ${fillClass}" style="width:${item.value}%"></div></div>
+          <div class="num">${item.value}%</div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function stackList(items){
+      return `<div class="stack-list">${items.map(item => `
+        <div class="stack-row">
+          <div class="lab">${item.label}</div>
+          <div class="stack-track"><div class="fill stack-fill ${item.cls}" style="width:${item.value / item.max * 100}%"></div></div>
+          <div class="num">${item.value}${item.unit || ""}</div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function donut(cfg){
+      const total = cfg.segments.reduce((sum, item) => sum + item.value, 0);
+      let cursor = 0;
+      const stops = cfg.segments.map(item => {
+        const start = cursor / total * 100;
+        cursor += item.value;
+        const end = cursor / total * 100;
+        return `${item.color} ${start}% ${end}%`;
+      }).join(",");
+      return `<div class="donut-wrap">
+        <div class="donut" style="background:conic-gradient(${stops})">
+          <div class="donut-core">
+            <div class="big">${cfg.total}</div>
+            <div class="small">${cfg.subtitle}</div>
+          </div>
+        </div>
+        <div class="legend">${cfg.segments.map(item => `
+          <div class="legend-row">
+            <span class="dot" style="background:${item.color}"></span>
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+          </div>
+        `).join("")}</div>
+      </div>`;
+    }
+
+    function financeHtml(dept){
+      return `
+        <div class="metric-grid-4">${dept.metrics.map(item => `
+          <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+        `).join("")}</div>
+        <div class="viz-grid-2">
+          <div class="viz-panel">
+            <div class="viz-title">盈利与现金结构</div>
+            ${barChart(dept.bars, ["#0052d9","#2f7bff","#79a8ff","#003a99"], "tall")}
+          </div>
+          <div class="viz-panel">
+            <div class="viz-title">重点风险</div>
+            <div class="risk-list">${dept.risks.map(item => `
+              <div class="risk-item">
+                <div><strong>${item.title}</strong><span>${item.desc}</span></div>
+                <div class="risk-tag ${item.level}">${item.level === "high" ? "高" : item.level === "mid" ? "中" : "低"}</div>
+              </div>
+            `).join("")}</div>
+          </div>
+        </div>`;
+    }
+
+    function productHtml(dept){
+      return `
+        <div class="viz-grid-mix">
+          <div class="viz-panel">
+            <div class="viz-title">产品路标推进</div>
+            ${progressList(dept.roadmap, "purple")}
+          </div>
+          <div class="viz-panel">
+            <div class="viz-title">团队与质量</div>
+            <div class="metric-grid-3">${dept.team.map(item => `
+              <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+            `).join("")}</div>
+          </div>
+        </div>
+        <div class="metric-grid-4">${dept.metrics.map(item => `
+          <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+        `).join("")}</div>
+        <div class="viz-panel">
+          <div class="viz-title">产品质量分布</div>
+          ${stackList(dept.bugs)}
+        </div>`;
+    }
+
+    function deliveryHtml(dept){
+      return `
+        <div class="metric-grid-4">${dept.metrics.map(item => `
+          <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+        `).join("")}</div>
+        <div class="viz-grid-2 delivery-grid">
+          <div class="viz-panel">
+            <div class="viz-title">重点项目执行看板</div>
+            <div class="project-board">${dept.projects.map(item => `
+              <div class="project-row">
+                <div class="main">
+                  <strong>${item.title}</strong>
+                  <div class="inline-meta">${item.meta.map(meta => `<span>${meta}</span>`).join("")}</div>
+                </div>
+                <div class="project-tag ${item.tone}">${item.tone === "good" ? "正常" : item.tone === "warn" ? "关注" : "风险"}</div>
+              </div>
+            `).join("")}</div>
+          </div>
+          <div class="viz-panel delivery-chart">
+            <div class="viz-title">资源投放分布</div>
+            ${barChart(dept.resources, ["#0052d9","#2f7bff","#4e8dff","#79a8ff","#003a99","#b9d3ff"], "tall")}
+          </div>
+        </div>`;
+    }
+
+    function solutionHtml(dept){
+      return `
+        <div class="viz-grid-mix">
+          <div class="viz-panel">
+            <div class="viz-title">合同与收入结构</div>
+            ${donut(dept.donut)}
+          </div>
+          <div class="viz-panel">
+            <div class="viz-title">关键商机</div>
+            <div class="opportunity-list">${dept.opportunities.map(item => `
+              <div class="opportunity-item">
+                <div><strong>${item.title}</strong><span>${item.desc}</span></div>
+              </div>
+            `).join("")}</div>
+          </div>
+        </div>
+        <div class="metric-grid-3">${dept.metrics.map(item => `
+          <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+        `).join("")}</div>`;
+    }
+
+    function hrHtml(dept){
+      return `
+        <div class="metric-grid-4">${dept.metrics.map(item => `
+          <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+        `).join("")}</div>
+        <div class="viz-grid-2">
+          <div class="viz-panel">
+            <div class="viz-title">招聘漏斗</div>
+            <div class="funnel-list">${dept.funnel.map((item, idx) => `
+              <div class="funnel-row">
+                <div class="lab">${item.label}</div>
+                <div class="track"><div class="fill ${idx === 0 ? 'blue' : idx === 1 ? 'amber' : 'red'}" style="width:${item.value}%"></div></div>
+                <div class="num">${item.value}%</div>
+              </div>
+            `).join("")}</div>
+            <div class="focus-list" style="margin-top:7px">${dept.funnel.map(item => `
+              <div class="list-item"><div><strong>${item.label}</strong><span>${item.text}</span></div></div>
+            `).join("")}</div>
+          </div>
+          <div class="viz-panel">
+            <div class="viz-title">部门缺口分布</div>
+            <div class="vacancy-list">${dept.vacancies.map(item => `
+              <div class="vacancy-item">
+                <div><strong>${item.title}</strong><span>${item.desc}</span></div>
+                <div class="vacancy-tag ${item.level}">${item.level === "high" ? "高" : item.level === "mid" ? "中" : "低"}</div>
+              </div>
+            `).join("")}</div>
+          </div>
+        </div>`;
+    }
+
+    function overviewHtml(){
+      return `
+        <div class="metric-grid-4">${topMetrics.map(item => `
+          <div class="top-metric">
+            <div class="label">${item.label}</div>
+            <div class="value ${item.cls}">${item.value}</div>
+            <div class="desc">${item.desc}</div>
+          </div>
+        `).join("")}</div>`;
+    }
+
+    function solutionHtml(dept){
+      return `
+        <div class="solution-layout">
+          <div class="viz-grid-mix solution-top">
+            <div class="viz-panel">
+              <div class="viz-title">合同与收入结构</div>
+              ${donut(dept.donut)}
+            </div>
+            <div class="viz-panel">
+              <div class="viz-title">关键商机</div>
+              <div class="opportunity-list">${dept.opportunities.map(item => `
+                <div class="opportunity-item">
+                  <div><strong>${item.title}</strong><span>${item.desc}</span></div>
+                </div>
+              `).join("")}</div>
+            </div>
+          </div>
+          <div class="metric-grid-3">${dept.metrics.map(item => `
+            <div class="metric-box"><div class="label">${item.label}</div><div class="value">${item.value}</div><div class="desc">${item.desc}</div></div>
+          `).join("")}</div>
+        </div>`;
+    }
+
+    function overviewHtml(){
+      return `
+        <div class="metric-grid-4 overview-grid">${topMetrics.map(item => `
+          <div class="top-metric">
+            <div class="label">${item.label}</div>
+            <div class="value ${item.cls}">${item.value}</div>
+            <div class="desc">${item.desc}</div>
+          </div>
+        `).join("")}</div>`;
+    }
+
+    function renderDeptCard(dept){
+      const bodyMap = {
+        overview: overviewHtml,
+        finance: financeHtml,
+        product: productHtml,
+        delivery: deliveryHtml,
+        solution: solutionHtml,
+        hr: hrHtml
+      };
+
+      const statusHtml = dept.status?.text ? `<span class="status ${dept.status.tone}">${dept.status.text}</span>` : "";
+      const actionsHtml = dept.file ? `
+            <div class="dept-actions">
+              ${statusHtml}
+              <button class="more-btn" type="button" data-more="${dept.key}" aria-label="查看${dept.name}详情">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M8 16 16 8"></path>
+                  <path d="M9 8h7v7"></path>
+                </svg>
+              </button>
+            </div>` : `
+            <div class="dept-actions">
+              ${statusHtml}
+            </div>`;
+
+      return `
+        <article class="dept-card ${dept.key}">
+          <div class="dept-head">
+            <div class="dept-title">
+              <h3>${dept.name}</h3>
+            </div>
+            ${actionsHtml}
+          </div>
+          ${bodyMap[dept.key](dept)}
+        </article>`;
+    }
+
+    function renderModal(){
+      if (!activeDetail) return "";
+      const dept = departments[activeDetail];
+      return `
+        <div class="modal-overlay open" id="detail-modal">
+          <div class="modal">
+            <div class="modal-head">
+              <div>
+                <div class="modal-title">${dept.name}详情</div>
+              </div>
+              <div class="modal-actions">
+                <button class="modal-close" type="button" id="modal-close">×</button>
+              </div>
+            </div>
+            <div class="modal-frame">
+              <iframe title="${dept.name}详情" src="./${dept.file}"></iframe>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function bindEvents(){
+      document.querySelectorAll("[data-more]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          activeDetail = btn.dataset.more;
+          renderPage();
+        });
+      });
+
+      const closeBtn = document.getElementById("modal-close");
+      if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+          activeDetail = null;
+          renderPage();
+        });
+      }
+
+      const overlay = document.getElementById("detail-modal");
+      if (overlay) {
+        overlay.addEventListener("click", event => {
+          if (event.target === overlay) {
+            activeDetail = null;
+            renderPage();
+          }
+        });
+      }
+    }
+
+    function renderPage(){
+      app.innerHTML = `
+        <div class="topbar">
+          <div class="crumb"><span class="current">经营数据看板</span></div>
+        </div>
+        <section class="dept-grid">${dashboardCards.map(renderDeptCard).join("")}</section>
+        ${renderModal()}
+      `;
+      bindEvents();
+    }
+
+    renderPage();
+  </script>
+</body>
+</html>

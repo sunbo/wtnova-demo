@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目交付详情</title>
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-light: #a78bfa;
+            --primary-dark: #5b21b6;
+            --accent-color: #06b6d4;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .page-container {
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb .current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .file-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--success-color);
+        }
+
+        /* 主内容区 */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 中间左右布局 */
+        .middle-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .middle-layout .card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .middle-layout .card .card-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-title .icon {
+            font-size: 16px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .card-body {
+            padding: 14px 16px;
+        }
+
+        /* 甘特图样式 */
+        .gantt-container {
+            overflow-x: auto;
+        }
+
+        .gantt-chart {
+            min-width: 900px;
+        }
+
+        .gantt-header {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8fafc;
+            position: sticky;
+            top: 0;
+        }
+
+        .gantt-header-cell {
+            padding: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            border-right: 1px solid var(--border-color);
+        }
+
+        .gantt-header-cell.project {
+            width: 140px;
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        .gantt-header-cell.month {
+            width: 60px;
+            flex-shrink: 0;
+        }
+
+        .gantt-row {
+            display: flex;
+            border-bottom: 1px solid #f1f5f9;
+            min-height: 36px;
+        }
+
+        .gantt-row:hover {
+            background: #fafbfc;
+        }
+
+        .gantt-cell {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-right: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+        }
+
+        .gantt-cell.project {
+            width: 140px;
+            font-weight: 500;
+            color: var(--text-primary);
+            flex-shrink: 0;
+        }
+
+        .gantt-cell.timeline {
+            flex: 1;
+            display: flex;
+            position: relative;
+            padding: 0;
+        }
+
+        .gantt-month {
+            width: 60px;
+            height: 100%;
+            border-right: 1px solid #f1f5f9;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .gantt-bar {
+            position: absolute;
+            height: 22px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-radius: 4px;
+            font-size: 10px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 6px;
+            cursor: pointer;
+        }
+
+        .gantt-bar.dev {
+            background: linear-gradient(90deg, #7c3aed, #a78bfa);
+        }
+
+        .gantt-bar.test {
+            background: linear-gradient(90deg, #06b6d4, #22d3ee);
+        }
+
+        .gantt-bar.online {
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .gantt-bar.accept {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .gantt-bar.warranty {
+            background: linear-gradient(90deg, #64748b, #94a3b8);
+        }
+
+        /* 进度概述 */
+        .progress-overview {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+
+        .progress-overview .overview-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .progress-overview .overview-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* 项目卡片列表 */
+        .project-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .project-card {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .project-card:hover {
+            border-color: var(--primary-light);
+        }
+
+        .project-card .card-project-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .project-card .card-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+
+        .project-card .card-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .project-card .card-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            min-width: 60px;
+        }
+
+        .project-card .card-value {
+            font-size: 12px;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .project-card .card-value.risk {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        /* 资源分布网格 */
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .resource-item {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .resource-item .item-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .resource-item .item-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .resource-item .pie-wrapper {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+
+        .resource-item .item-info {
+            flex: 1;
+        }
+
+        .resource-item .percentage {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .resource-item .desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* 柱状图 */
+        .bar-chart {
+            height: 180px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 10px 0;
+        }
+
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+
+        .bar-wrapper {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .bar {
+            width: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+            border-radius: 4px 4px 0 0;
+            min-height: 4px;
+            transition: height 0.3s;
+        }
+
+        .bar-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 6px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            max-height: 60px;
+            overflow: hidden;
+        }
+
+        .bar-value {
+            font-size: 11px;
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        /* 回款统计 */
+        .payment-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .payment-stat-item {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            padding: 14px;
+            border-radius: var(--radius-md);
+            color: white;
+            text-align: center;
+        }
+
+        .payment-stat-item.cyan {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .payment-stat-item.emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .payment-stat-item.amber {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .payment-stat-item .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 6px;
+        }
+
+        .payment-stat-item .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .payment-stat-item .stat-unit {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+
+        .data-table tr:hover td {
+            background: #fafbfc;
+        }
+
+        .data-table .text-center {
+            text-align: center;
+        }
+
+        .data-table .text-right {
+            text-align: right;
+        }
+
+        .data-table .amount {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .data-table .progress-cell {
+            width: 100px;
+        }
+
+        .data-table .progress-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .data-table .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            border-radius: 3px;
+        }
+
+        /* 表格滚动 */
+        .table-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .resource-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .middle-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .payment-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .project-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* V3 unified compact detail style */
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-dark: #1d4ed8;
+            --accent-color: #0891b2;
+            --bg-color: #f4f7fb;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #526077;
+            --text-muted: #8c97aa;
+            --border-color: #dde5ef;
+            --success-color: #0f9f6e;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 16px 40px -28px rgba(15, 23, 42, 0.28);
+            --radius-sm: 10px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        body {
+            background: var(--bg-color) !important;
+            font-size: 12px;
+            line-height: 1.42;
+        }
+
+        .page-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 12px !important;
+        }
+
+        .top-bar,
+        .main-content,
+        .middle-layout {
+            gap: 10px !important;
+        }
+
+        .top-bar {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            min-height: 28px;
+        }
+
+        .detail-meta,
+        .actions,
+        .btn,
+        .card-subtitle,
+        .file-indicator {
+            font-size: 10px !important;
+        }
+
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        .detail-meta strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+        }
+
+        .btn-primary {
+            background: #0f172a !important;
+            box-shadow: none !important;
+        }
+
+        .file-indicator {
+            background: #f8fafc !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .card,
+        .project-card {
+            border-radius: 14px !important;
+            border-color: var(--border-color) !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .card:hover,
+        .project-card:hover {
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .card-header {
+            padding: 10px 12px !important;
+            background: #fbfdff !important;
+        }
+
+        .card-title {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            gap: 0 !important;
+        }
+
+        .card-title .icon {
+            display: none !important;
+        }
+
+        .card-body {
+            padding: 10px 12px !important;
+        }
+
+        .card-subtitle,
+        .project-card .card-label,
+        .project-card .card-row,
+        th,
+        td {
+            font-size: 10px !important;
+            line-height: 1.45 !important;
+        }
+
+        .project-cards {
+            gap: 8px !important;
+        }
+
+        .project-card {
+            padding: 10px !important;
+            background: #f8fafc !important;
+        }
+
+        .project-card .card-project-title,
+        .project-card .card-value {
+            font-size: 11px !important;
+        }
+
+        .project-card .card-label,
+        .project-card .card-row,
+        th,
+        td {
+            font-size: 10px !important;
+        }
+
+        .project-card .card-value.risk {
+            color: var(--danger-color) !important;
+        }
+
+        .metric-card,
+        .summary-card,
+        .info-card,
+        .progress-card {
+            background: #f8fafc !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+            box-shadow: none !important;
+        }
+
+        .percentage {
+            color: var(--primary-color) !important;
+        }
+
+        .payment-stat-item {
+            background: #ffffff !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+            color: var(--text-primary) !important;
+        }
+
+        .payment-stat-item.cyan,
+        .payment-stat-item.emerald,
+        .payment-stat-item.amber {
+            background: #ffffff !important;
+        }
+
+        .payment-stat-item .stat-label {
+            color: var(--text-secondary) !important;
+            font-size: 10px !important;
+        }
+
+        .payment-stat-item .stat-value {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: var(--primary-dark) !important;
+        }
+
+        .payment-stat-item .stat-unit {
+            color: var(--text-muted) !important;
+            font-size: 12px !important;
+        }
+
+        .payment-stat-item:nth-child(1) .stat-value {
+            color: #7c3aed !important;
+        }
+
+        .payment-stat-item.cyan .stat-value {
+            color: var(--primary-color) !important;
+        }
+
+        .payment-stat-item.emerald .stat-value {
+            color: var(--success-color) !important;
+        }
+
+        .payment-stat-item.amber .stat-value {
+            color: var(--warning-color) !important;
+        }
+
+        table {
+            font-size: 11px !important;
+        }
+
+        th {
+            padding: 7px 8px !important;
+            background: #f8fafc !important;
+        }
+
+        td {
+            padding: 8px !important;
+        }
+
+        .card,
+        .project-card,
+        .metric-card,
+        .summary-card,
+        .info-card,
+        .progress-card,
+        .payment-stat-item {
+            border-radius: 12px !important;
+        }
+        /* V3 detail hover/background sync */
+        :root {
+            --bg-color: #fafafa;
+        }
+
+        body {
+            background: #fafafa !important;
+        }
+
+        .btn:hover,
+        .btn-primary:hover,
+        .btn-outline:hover,
+        .card:hover,
+        .project-card:hover,
+        .stat-item:hover,
+        .summary-item:hover,
+        .metric-box:hover,
+        .viz-panel:hover,
+        .list-item:hover,
+        .risk-item:hover,
+        .opportunity-item:hover,
+        .vacancy-item:hover,
+        .project-row:hover,
+        .payment-stat-item:hover,
+        .opp-stat-item:hover,
+        .bi-panel:hover,
+        .dept-bi-row:hover,
+        .rank-row:hover,
+        .mini-summary-item:hover,
+        .file-indicator:hover {
+            background: #f5f5f5 !important;
+            box-shadow: none !important;
+        }
+
+        .btn-primary:hover {
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            transform: none !important;
+        }
+
+        .data-table tr:hover td,
+        tr:hover td {
+            background: #f5f5f5 !important;
+        }
+        :root {
+            --primary-color: #0052d9;
+            --primary-light: #3d7dff;
+            --primary-dark: #003a99;
+            --accent-color: #79a8ff;
+            --primary-soft: #e8f0ff;
+            --primary-soft-strong: #cfe0ff;
+            --bg-color: #f5f8fe;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #526077;
+            --text-muted: #8c97aa;
+            --border-color: #dde5ef;
+            --success-color: #2f7bff;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+        }
+        .btn-primary{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-dark) 100%) !important;border-color:var(--primary-color)!important;box-shadow:none!important}
+        .btn-primary:hover{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-dark) 100%) !important}
+        .file-indicator{background:var(--primary-soft)!important;border-color:var(--primary-soft-strong)!important;color:var(--primary-color)!important}
+        .gantt-bar.dev,.gantt-bar.test,.gantt-bar.online,.gantt-bar.accept,.gantt-bar.warranty{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+        .payment-stat-item,.payment-stat-item.cyan,.payment-stat-item.emerald,.payment-stat-item.amber{
+            background:#fff !important;
+            border:1px solid var(--primary-soft-strong) !important;
+            box-shadow:var(--shadow-sm) !important;
+        }
+        .payment-stat-item .stat-label,.payment-stat-item .stat-value,.payment-stat-item .stat-unit{
+            color:var(--primary-color) !important;
+            opacity:1 !important;
+        }
+        .data-table .progress-fill{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <!-- SheetJS -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        // 默认甘特图数据
+        const defaultGanttData = [
+            { id: 1, project: '东锅APS项目', phases: [
+                { name: '开发', type: 'dev', start: 1, end: 4 },
+                { name: '测试', type: 'test', start: 3, end: 5 },
+                { name: '上线', type: 'online', start: 5, end: 6 },
+                { name: '验收', type: 'accept', start: 6, end: 7 }
+            ]},
+            { id: 2, project: '核电MES系统', phases: [
+                { name: '开发', type: 'dev', start: 2, end: 5 },
+                { name: '测试', type: 'test', start: 4, end: 6 },
+                { name: '上线', type: 'online', start: 6, end: 7 }
+            ]},
+            { id: 3, project: '风电计划系统', phases: [
+                { name: '开发', type: 'dev', start: 3, end: 6 },
+                { name: '测试', type: 'test', start: 5, end: 7 }
+            ]},
+            { id: 4, project: '北京PMO项目', phases: [
+                { name: '开发', type: 'dev', start: 1, end: 3 },
+                { name: '上线', type: 'online', start: 3, end: 4 },
+                { name: '验收', type: 'accept', start: 4, end: 5 }
+            ]},
+            { id: 5, project: 'IDME外包服务', phases: [
+                { name: '交付', type: 'online', start: 1, end: 12 }
+            ]},
+            { id: 6, project: '金航数码项目', phases: [
+                { name: '开发', type: 'dev', start: 4, end: 7 },
+                { name: '测试', type: 'test', start: 6, end: 8 }
+            ]},
+        ];
+
+        // 默认项目进展数据
+        const defaultProjectProgress = {
+            overview: '当前共有6个在建项目，整体进度良好。其中东锅APS项目已完成二期开发，正在进行测试阶段；核电MES系统已进入验收准备阶段；风电计划系统按计划推进中。北京PMO项目已顺利上线运行，IDME外包服务持续稳定交付中。',
+            projects: [
+                { id: 1, name: '东锅APS项目', progress: '二期开发完成，测试中', risk: '' },
+                { id: 2, name: '核电MES系统', progress: '验收准备中，文档整理完成', risk: '' },
+                { id: 3, name: '风电计划系统', progress: '开发进度80%，按计划推进', risk: '人员可能不足' },
+                { id: 4, name: '北京PMO项目', progress: '已上线，运行稳定', risk: '' },
+                { id: 5, name: 'IDME外包服务', progress: '持续交付中，本月完成85人天', risk: '' },
+                { id: 6, name: '金航数码项目', progress: '需求确认中，即将启动开发', risk: '需求变更频繁' },
+            ]
+        };
+
+        // 默认资源分布数据
+        const defaultResourceData = {
+            utilization: { delivery: 75, other: 25, percentage: 75, desc: '交付人天利用率良好，建议提升至80%以上' },
+            distribution: [
+                { project: '东锅APS', days: 120 },
+                { project: '核电MES', days: 85 },
+                { project: '风电计划', days: 60 },
+                { project: '北京PMO', days: 45 },
+                { project: 'IDME外包', days: 180 },
+                { project: '金航数码', days: 30 },
+            ],
+            outsourcing: { outsource: 35, internal: 65, percentage: 35, desc: '外采占比适中，控制合理范围内' },
+            overrun: { planned: 92, actual: 100, percentage: 92, desc: '资源使用基本符合计划，略有结余' },
+            date: '2024年4月7日'
+        };
+
+        // 默认回款数据
+        const defaultPaymentData = {
+            total: 1200,
+            received: 580,
+            rate: 48,
+            forecast: 320,
+            details: [
+                { id: 1, project: '东锅APS项目', amount: 350, received: 180, node1: 60, node2: 50, node3: 40, node4: 30, nextDate: '2024-05-15' },
+                { id: 2, project: '核电MES系统', amount: 280, received: 140, node1: 50, node2: 40, node3: 30, node4: 20, nextDate: '2024-05-20' },
+                { id: 3, project: '风电计划系统', amount: 200, received: 80, node1: 40, node2: 30, node3: 20, node4: 10, nextDate: '2024-06-10' },
+                { id: 4, project: '北京PMO项目', amount: 150, received: 100, node1: 40, node2: 35, node3: 25, node4: 0, nextDate: '2024-04-25' },
+                { id: 5, project: 'IDME外包服务', amount: 180, received: 70, node1: 20, node2: 20, node3: 15, node4: 15, nextDate: '2024-04-30' },
+                { id: 6, project: '金航数码项目', amount: 40, received: 10, node1: 10, node2: 10, node3: 10, node4: 0, nextDate: '2024-07-01' },
+            ]
+        };
+
+        const getSheetNameV2 = (workbook, candidates) => candidates.find((name) => workbook.SheetNames.includes(name));
+        const toNumberV2 = (value, fallback = 0) => {
+            const num = Number(value);
+            return Number.isFinite(num) ? num : fallback;
+        };
+        const toTextV2 = (value, fallback = '') => {
+            if (value === null || value === undefined) return fallback;
+            const text = String(value).trim();
+            return text || fallback;
+        };
+
+        // 饼图组件
+        const MiniPieChart = ({ data, colors, size = 80 }) => {
+            const center = size / 2;
+            const radius = size / 2 - 4;
+            const innerRadius = radius * 0.6;
+
+            let currentAngle = -90;
+            const paths = [];
+            const totalValue = Object.values(data).reduce((a, b) => a + b, 0);
+
+            Object.values(data).forEach((value, index) => {
+                const angle = (value / totalValue) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+
+                const startRad = (startAngle * Math.PI) / 180;
+                const endRad = (endAngle * Math.PI) / 180;
+
+                const x1 = center + radius * Math.cos(startRad);
+                const y1 = center + radius * Math.sin(startRad);
+                const x2 = center + radius * Math.cos(endRad);
+                const y2 = center + radius * Math.sin(endRad);
+                const x3 = center + innerRadius * Math.cos(endRad);
+                const y3 = center + innerRadius * Math.sin(endRad);
+                const x4 = center + innerRadius * Math.cos(startRad);
+                const y4 = center + innerRadius * Math.sin(startRad);
+
+                const largeArc = angle > 180 ? 1 : 0;
+                const pathD = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+
+                paths.push(<path key={index} d={pathD} fill={colors[index]} />);
+                currentAngle = endAngle;
+            });
+
+            return (
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    {paths}
+                </svg>
+            );
+        };
+
+        // 甘特图组件
+        const GanttChart = ({ data }) => {
+            const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
+            return (
+                <div className="gantt-container">
+                    <div className="gantt-chart">
+                        <div className="gantt-header">
+                            <div className="gantt-header-cell project">项目名称</div>
+                            {months.map(m => (
+                                <div key={m} className="gantt-header-cell month">{m}</div>
+                            ))}
+                        </div>
+                        {data.map(item => (
+                            <div key={item.id} className="gantt-row">
+                                <div className="gantt-cell project">{item.project}</div>
+                                <div className="gantt-cell timeline">
+                                    {months.map((_, idx) => (
+                                        <div key={idx} className="gantt-month"></div>
+                                    ))}
+                                    {item.phases.map((phase, pIdx) => (
+                                        <div
+                                            key={pIdx}
+                                            className={`gantt-bar ${phase.type}`}
+                                            style={{
+                                                left: `${(phase.start - 1) * 60 + 4}px`,
+                                                width: `${(phase.end - phase.start) * 60 - 8}px`
+                                            }}
+                                            title={phase.name}
+                                        >
+                                            {phase.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // 项目整体进度卡片
+        const GanttCard = ({ data }) => {
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">📅</span>
+                            项目整体进度
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <GanttChart data={data} />
+                    </div>
+                </div>
+            );
+        };
+
+        // 项目进展&风险卡片
+        const ProjectProgressCard = ({ data }) => {
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">📋</span>
+                            项目当前进展&风险问题
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="progress-overview">
+                            <div className="overview-title">项目整体进度概述</div>
+                            <div className="overview-text">{data.overview}</div>
+                        </div>
+                        <div className="project-cards">
+                            {data.projects.map(item => (
+                                <div key={item.id} className="project-card">
+                                    <div className="card-project-title">{item.name}</div>
+                                    <div className="card-row">
+                                        <span className="card-label">最新进展:</span>
+                                        <span className="card-value">{item.progress}</span>
+                                    </div>
+                                    <div className="card-row">
+                                        <span className="card-label">风险问题:</span>
+                                        <span className={`card-value ${item.risk ? 'risk' : ''}`}>
+                                            {item.risk || '无'}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 交付资源分布卡片
+        const ResourceCard = ({ data }) => {
+            const maxDays = Math.max(...data.distribution.map(d => d.days));
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">📊</span>
+                            交付资源分布
+                        </div>
+                        <span className="card-subtitle">截止 {data.date}</span>
+                    </div>
+                    <div className="card-body">
+                        <div className="resource-grid">
+                            <div className="resource-item">
+                                <div className="item-title">① 交付人天利用率</div>
+                                <div className="item-content">
+                                    <div className="pie-wrapper">
+                                        <MiniPieChart
+                                            data={{ delivery: data.utilization.delivery, other: data.utilization.other }}
+                                            colors={['#0052d9', '#e6edf5']}
+                                        />
+                                    </div>
+                                    <div className="item-info">
+                                        <div className="percentage">{data.utilization.percentage}%</div>
+                                        <div className="desc">{data.utilization.desc}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="resource-item">
+                                <div className="item-title">② 交付人力分布</div>
+                                <div className="bar-chart">
+                                    {data.distribution.map((item, idx) => (
+                                        <div key={idx} className="bar-item">
+                                            <div className="bar-wrapper">
+                                                <div className="bar-value">{item.days}</div>
+                                                <div
+                                                    className="bar"
+                                                    style={{ height: `${(item.days / maxDays) * 100}%` }}
+                                                ></div>
+                                            </div>
+                                            <div className="bar-label">{item.project}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="resource-item">
+                                <div className="item-title">③ 外采人天占比</div>
+                                <div className="item-content">
+                                    <div className="pie-wrapper">
+                                        <MiniPieChart
+                                            data={{ outsource: data.outsourcing.outsource, internal: data.outsourcing.internal }}
+                                            colors={['#2f7bff', '#e6edf5']}
+                                        />
+                                    </div>
+                                    <div className="item-info">
+                                        <div className="percentage" style={{ color: '#2f7bff' }}>{data.outsourcing.percentage}%</div>
+                                        <div className="desc">{data.outsourcing.desc}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="resource-item">
+                                <div className="item-title">④ 资源超投率</div>
+                                <div className="item-content">
+                                    <div className="pie-wrapper">
+                                        <MiniPieChart
+                                            data={{ planned: data.overrun.planned, actual: data.overrun.actual - data.overrun.planned }}
+                                            colors={['#79a8ff', '#e6edf5']}
+                                        />
+                                    </div>
+                                    <div className="item-info">
+                                        <div className="percentage" style={{ color: '#79a8ff' }}>{data.overrun.percentage}%</div>
+                                        <div className="desc">{data.overrun.desc}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 交付回款卡片
+        const PaymentCard = ({ data }) => {
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">💰</span>
+                            交付回款情况总览
+                        </div>
+                        <span className="card-subtitle">截止 2024年4月7日</span>
+                    </div>
+                    <div className="card-body">
+                        <div className="payment-stats">
+                            <div className="payment-stat-item">
+                                <div className="stat-label">总合同金额</div>
+                                <div className="stat-value">{data.total}<span className="stat-unit">万</span></div>
+                            </div>
+                            <div className="payment-stat-item cyan">
+                                <div className="stat-label">累计回款金额</div>
+                                <div className="stat-value">{data.received}<span className="stat-unit">万</span></div>
+                            </div>
+                            <div className="payment-stat-item emerald">
+                                <div className="stat-label">整体回款率</div>
+                                <div className="stat-value">{data.rate}<span className="stat-unit">%</span></div>
+                            </div>
+                            <div className="payment-stat-item amber">
+                                <div className="stat-label">半年度回款预测</div>
+                                <div className="stat-value">{data.forecast}<span className="stat-unit">万</span></div>
+                            </div>
+                        </div>
+
+                        <div className="table-scroll">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>项目名称</th>
+                                        <th className="text-right">项目金额</th>
+                                        <th className="text-right">累计回款</th>
+                                        <th className="text-right">节点1</th>
+                                        <th className="text-right">节点2</th>
+                                        <th className="text-right">节点3</th>
+                                        <th className="text-right">节点4</th>
+                                        <th>预计下次回款</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.details.map(item => (
+                                        <tr key={item.id}>
+                                            <td>{item.project}</td>
+                                            <td className="text-right amount">{item.amount}万</td>
+                                            <td className="text-right">{item.received}万</td>
+                                            <td className="text-right">{item.node1}万</td>
+                                            <td className="text-right">{item.node2}万</td>
+                                            <td className="text-right">{item.node3}万</td>
+                                            <td className="text-right">{item.node4}万</td>
+                                            <td>{item.nextDate}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 主应用组件
+        const App = () => {
+            const [ganttData, setGanttData] = useState(defaultGanttData);
+            const [projectProgress, setProjectProgress] = useState(defaultProjectProgress);
+            const [resourceData, setResourceData] = useState(defaultResourceData);
+            const [paymentData, setPaymentData] = useState(defaultPaymentData);
+            const [fileName, setFileName] = useState('');
+            const fileInputRef = useRef(null);
+            const updateTime = (() => {
+                const now = new Date();
+                const pad = (num) => String(num).padStart(2, '0');
+                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
+            })();
+
+            const handleFileUploadV2 = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                setFileName(file.name);
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = event.target.result;
+                        const workbook = XLSX.read(data, { type: 'binary' });
+
+                        const ganttSheetName = getSheetNameV2(workbook, ['项目进度']);
+                        if (ganttSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[ganttSheetName]);
+                            const ganttRows = rows.map((row, idx) => {
+                                const phases = [];
+                                for (let i = 1; i <= 4; i += 1) {
+                                    const name = toTextV2(row[`阶段${i}名称`]);
+                                    if (!name) continue;
+                                    phases.push({
+                                        name,
+                                        type: toTextV2(row[`阶段${i}类型`], 'dev'),
+                                        start: toNumberV2(row[`阶段${i}开始月`], 1),
+                                        end: toNumberV2(row[`阶段${i}结束月`], 1)
+                                    });
+                                }
+                                return {
+                                    id: idx + 1,
+                                    project: toTextV2(row['项目名称']),
+                                    phases
+                                };
+                            }).filter((item) => item.project && item.phases.length > 0);
+                            if (ganttRows.length > 0) {
+                                setGanttData(ganttRows);
+                            }
+                        }
+
+                        const progressSheetName = getSheetNameV2(workbook, ['项目进展']);
+                        if (progressSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[progressSheetName]);
+                            if (rows.length > 0) {
+                                setProjectProgress({
+                                    overview: toTextV2(rows[0]['整体概述'], defaultProjectProgress.overview),
+                                    projects: rows.filter((row) => row['项目名称']).map((row, idx) => ({
+                                        id: idx + 1,
+                                        name: toTextV2(row['项目名称']),
+                                        progress: toTextV2(row['最新进展']),
+                                        risk: toTextV2(row['风险问题'])
+                                    }))
+                                });
+                            }
+                        }
+
+                        const resourceSheetName = getSheetNameV2(workbook, ['资源情况', '资源投放']);
+                        if (resourceSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[resourceSheetName]);
+                            if (rows.length > 0) {
+                                const first = rows[0];
+                                const distribution = rows.filter((row) => row['项目名称']).map((row) => ({
+                                    project: toTextV2(row['项目名称']),
+                                    days: toNumberV2(row['人天投入'])
+                                }));
+                                const planned = toNumberV2(first['计划投入'], defaultResourceData.overrun.planned);
+                                const actual = toNumberV2(first['实际投入'], defaultResourceData.overrun.actual);
+                                setResourceData({
+                                    utilization: {
+                                        delivery: toNumberV2(first['交付利用率'], defaultResourceData.utilization.delivery),
+                                        other: toNumberV2(first['其他占比'], defaultResourceData.utilization.other),
+                                        percentage: toNumberV2(first['交付利用率'], defaultResourceData.utilization.percentage),
+                                        desc: toTextV2(first['利用率说明'], defaultResourceData.utilization.desc)
+                                    },
+                                    distribution: distribution.length > 0 ? distribution : defaultResourceData.distribution,
+                                    outsourcing: {
+                                        outsource: toNumberV2(first['外采占比'], defaultResourceData.outsourcing.outsource),
+                                        internal: toNumberV2(first['内部占比'], defaultResourceData.outsourcing.internal),
+                                        percentage: toNumberV2(first['外采占比'], defaultResourceData.outsourcing.percentage),
+                                        desc: toTextV2(first['外采说明'], defaultResourceData.outsourcing.desc)
+                                    },
+                                    overrun: {
+                                        planned,
+                                        actual,
+                                        percentage: actual > 0 ? Math.round((planned / actual) * 100) : defaultResourceData.overrun.percentage,
+                                        desc: toTextV2(first['超投说明'], defaultResourceData.overrun.desc)
+                                    },
+                                    date: toTextV2(first['日期'], defaultResourceData.date)
+                                });
+                            }
+                        }
+
+                        const paymentSheetName = getSheetNameV2(workbook, ['回款明细']);
+                        if (paymentSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[paymentSheetName]);
+                            if (rows.length > 0) {
+                                const details = rows.filter((row) => row['项目名称']).map((row, idx) => ({
+                                    id: idx + 1,
+                                    project: toTextV2(row['项目名称']),
+                                    amount: toNumberV2(row['项目金额']),
+                                    received: toNumberV2(row['累计回款']),
+                                    node1: toNumberV2(row['回款节点1']),
+                                    node2: toNumberV2(row['回款节点2']),
+                                    node3: toNumberV2(row['回款节点3']),
+                                    node4: toNumberV2(row['回款节点4']),
+                                    nextDate: toTextV2(row['预计下次回款时间'])
+                                }));
+                                const first = rows[0];
+                                const total = details.reduce((sum, item) => sum + item.amount, 0);
+                                const received = details.reduce((sum, item) => sum + item.received, 0);
+                                setPaymentData({
+                                    total,
+                                    received,
+                                    rate: total > 0 ? Math.round((received / total) * 100) : 0,
+                                    forecast: toNumberV2(first['半年度预测回款'], defaultPaymentData.forecast),
+                                    details
+                                });
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('解析Excel失败:', error);
+                        alert('解析Excel文件失败，请检查文件格式');
+                    }
+                };
+
+                reader.readAsBinaryString(file);
+            };
+
+            return (
+                <div className="page-container">
+                    <div className="top-bar">
+                        <div className="detail-meta">
+                            <span>所属部门：<strong>交付部</strong></span>
+                            <span>更新时间：<strong>{updateTime}</strong></span>
+                        </div>
+                        <div className="actions">
+                            <a
+                                className="btn btn-outline"
+                                href="../作战室数据导入模板/交付部-数据导入模板V2.xlsx"
+                                download
+                            >
+                                <span>↓</span>
+                                下载模板
+                            </a>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept=".xls,.xlsx"
+                                onChange={handleFileUploadV2}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <span>📤</span>
+                                导入周报数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="main-content">
+                        <GanttCard data={ganttData} />
+                        <div className="middle-layout">
+                            <ResourceCard data={resourceData} />
+                            <ProjectProgressCard data={projectProgress} />
+                        </div>
+                        <PaymentCard data={paymentData} />
+                    </div>
+                </div>
+            );
+        };
+
+        // 渲染应用
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

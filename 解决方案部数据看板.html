@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>售前商机详情</title>
+    <style>
+        :root {
+            --primary-color: #7c3aed;
+            --primary-light: #a78bfa;
+            --primary-dark: #5b21b6;
+            --accent-color: #06b6d4;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .page-container {
+            padding: 16px;
+            min-height: 100vh;
+        }
+
+        /* 顶部导航栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .breadcrumb a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--primary-color);
+        }
+
+        .breadcrumb .current {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .file-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--success-color);
+        }
+
+        /* 主内容区 - 左右布局 */
+        .main-layout {
+            display: flex;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .left-sidebar {
+            width: 320px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .right-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 让最后一个卡片自动填充剩余高度 */
+        .right-content .card:last-child {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-content .card:last-child .card-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .card-title .icon {
+            font-size: 16px;
+        }
+
+        .card-body {
+            padding: 14px 16px;
+        }
+
+        /* 目标进展卡片网格 */
+        .target-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        /* 饼图卡片 */
+        .pie-card {
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .pie-card .pie-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .pie-card .pie-chart {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 8px;
+            position: relative;
+        }
+
+        .pie-card .pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .pie-card .pie-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .pie-card .pie-unit {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .pie-card .pie-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            justify-content: center;
+            font-size: 10px;
+        }
+
+        .pie-card .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .pie-card .legend-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        /* 资源统计 */
+        .resource-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: #f8fafc;
+            border-radius: var(--radius-sm);
+        }
+
+        .resource-item .label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .resource-item .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .resource-item .value.danger {
+            color: var(--danger-color);
+        }
+
+        .resource-item .value.success {
+            color: var(--success-color);
+        }
+
+        /* Tab切换 */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 14px;
+        }
+
+        .tab-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            margin-bottom: -1px;
+        }
+
+        .tab-item:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-item.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .data-table th {
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: var(--text-primary);
+        }
+
+        .data-table tr:hover td {
+            background: #fafbfc;
+        }
+
+        .data-table .text-center {
+            text-align: center;
+        }
+
+        .data-table .text-right {
+            text-align: right;
+        }
+
+        .data-table .text-muted {
+            color: var(--text-muted);
+        }
+
+        .data-table .amount {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* 月份回款格子 */
+        .month-cells {
+            display: flex;
+            gap: 2px;
+        }
+
+        .month-cell {
+            width: 24px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            border-radius: 2px;
+            background: #f1f5f9;
+            color: var(--text-muted);
+        }
+
+        .month-cell.has-value {
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        /* 阶段标签 */
+        .stage-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .stage-tag.negotiation {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .stage-tag.signed {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .stage-tag.delivery {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .stage-tag.acceptance {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        /* 商机统计 */
+        .opportunity-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .opp-stat-item {
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            padding: 12px;
+            border-radius: var(--radius-md);
+            color: white;
+            text-align: center;
+        }
+
+        .opp-stat-item.cyan {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .opp-stat-item.emerald {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .opp-stat-item .stat-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .opp-stat-item .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .opp-stat-item .stat-unit {
+            font-size: 11px;
+            opacity: 0.9;
+        }
+
+        /* 优先级标签 */
+        .priority-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .priority-tag.high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .priority-tag.medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .priority-tag.low {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        /* 赢单率 */
+        .win-rate {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .win-rate-bar {
+            width: 50px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .win-rate-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #10b981, #34d399);
+        }
+
+        .win-rate-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            min-width: 32px;
+        }
+
+        /* 表格滚动容器 */
+        .table-scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .table-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .table-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .table-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        /* 待办事项 */
+        .todo-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .main-layout {
+                flex-direction: column;
+            }
+
+            .left-sidebar {
+                width: 100%;
+            }
+
+            .target-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .target-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .opportunity-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* V3 unified compact detail style */
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #60a5fa;
+            --primary-dark: #1d4ed8;
+            --accent-color: #0891b2;
+            --bg-color: #f4f7fb;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #526077;
+            --text-muted: #8c97aa;
+            --border-color: #dde5ef;
+            --success-color: #0f9f6e;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+            --shadow-md: 0 16px 40px -28px rgba(15, 23, 42, 0.28);
+            --shadow-lg: 0 20px 48px -32px rgba(15, 23, 42, 0.3);
+            --radius-sm: 10px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+
+        body {
+            background: var(--bg-color) !important;
+            font-size: 12px;
+            line-height: 1.42;
+        }
+
+        .page-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 12px !important;
+        }
+
+        .top-bar,
+        .main-layout,
+        .left-sidebar,
+        .right-content {
+            gap: 10px !important;
+        }
+
+        .top-bar {
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            min-height: 28px;
+        }
+
+        .detail-meta,
+        .actions,
+        .btn,
+        .file-indicator {
+            font-size: 10px !important;
+        }
+
+        .detail-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
+
+        .detail-meta strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border-radius: 999px;
+        }
+
+        .btn-primary {
+            background: #0f172a !important;
+            box-shadow: none !important;
+        }
+
+        .file-indicator {
+            background: #f8fafc !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-secondary) !important;
+        }
+
+        .card,
+        .pie-card {
+            border-radius: 14px !important;
+            border-color: var(--border-color) !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .card:hover {
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+        }
+
+        .card-header {
+            padding: 10px 12px !important;
+            background: #fbfdff !important;
+        }
+
+        .card-title {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            gap: 0 !important;
+        }
+
+        .card-title .icon {
+            display: none !important;
+        }
+
+        .card-body {
+            padding: 10px 12px !important;
+        }
+
+        .pie-card .pie-title,
+        .pie-card .pie-legend,
+        .pie-card .legend-item,
+        .stage-tag,
+        .priority-tag,
+        th,
+        td {
+            font-size: 10px !important;
+            line-height: 1.45 !important;
+        }
+
+        .target-grid {
+            gap: 8px !important;
+        }
+
+        .pie-card {
+            padding: 10px !important;
+            background: #f8fafc !important;
+        }
+
+        .pie-card .pie-title,
+        .pie-card .pie-legend,
+        .pie-card .legend-item,
+        th,
+        td {
+            font-size: 10px !important;
+        }
+
+        .pie-card .pie-value {
+            font-size: 18px !important;
+            color: var(--text-primary) !important;
+        }
+
+        .target-card,
+        .summary-card,
+        .contract-card,
+        .opportunity-summary {
+            background: #f8fafc !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+            box-shadow: none !important;
+        }
+
+        .stage-tag,
+        .priority-tag {
+            border-radius: 999px !important;
+            font-size: 10px !important;
+        }
+
+        .opp-stat-item {
+            background: #ffffff !important;
+            border: 1px solid var(--border-color) !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+            color: var(--text-primary) !important;
+            border-radius: 12px !important;
+        }
+
+        .opp-stat-item.cyan,
+        .opp-stat-item.emerald {
+            background: #ffffff !important;
+        }
+
+        .opp-stat-item .stat-label {
+            color: var(--text-secondary) !important;
+            font-size: 10px !important;
+        }
+
+        .opp-stat-item .stat-value {
+            font-size: 18px !important;
+            font-weight: 800 !important;
+            color: var(--primary-dark) !important;
+        }
+
+        .opp-stat-item .stat-unit {
+            color: var(--text-muted) !important;
+            font-size: 12px !important;
+        }
+
+        .opp-stat-item:nth-child(1) .stat-value {
+            color: #7c3aed !important;
+        }
+
+        .opp-stat-item.cyan .stat-value {
+            color: var(--primary-color) !important;
+        }
+
+        .opp-stat-item.emerald .stat-value {
+            color: var(--success-color) !important;
+        }
+
+        table {
+            font-size: 11px !important;
+        }
+
+        th {
+            padding: 7px 8px !important;
+            background: #f8fafc !important;
+        }
+
+        td {
+            padding: 8px !important;
+        }
+
+        .card,
+        .pie-card,
+        .target-card,
+        .summary-card,
+        .contract-card,
+        .opportunity-summary {
+            border-radius: 12px !important;
+        }
+        /* V3 detail hover/background sync */
+        :root {
+            --bg-color: #fafafa;
+        }
+
+        body {
+            background: #fafafa !important;
+        }
+
+        .btn:hover,
+        .btn-primary:hover,
+        .btn-outline:hover,
+        .card:hover,
+        .stat-item:hover,
+        .summary-item:hover,
+        .metric-box:hover,
+        .viz-panel:hover,
+        .list-item:hover,
+        .risk-item:hover,
+        .opportunity-item:hover,
+        .vacancy-item:hover,
+        .project-row:hover,
+        .payment-stat-item:hover,
+        .opp-stat-item:hover,
+        .bi-panel:hover,
+        .dept-bi-row:hover,
+        .rank-row:hover,
+        .mini-summary-item:hover,
+        .file-indicator:hover {
+            background: #f5f5f5 !important;
+            box-shadow: none !important;
+        }
+
+        .btn-primary:hover {
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color) !important;
+            transform: none !important;
+        }
+
+        .data-table tr:hover td,
+        tr:hover td {
+            background: #f5f5f5 !important;
+        }
+        :root {
+            --primary-color: #0052d9;
+            --primary-light: #3d7dff;
+            --primary-dark: #003a99;
+            --accent-color: #79a8ff;
+            --primary-soft: #e8f0ff;
+            --primary-soft-strong: #cfe0ff;
+            --bg-color: #f5f8fe;
+            --card-bg: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #526077;
+            --text-muted: #8c97aa;
+            --border-color: #dde5ef;
+            --success-color: #2f7bff;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+        }
+        .btn-primary{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-dark) 100%) !important;border-color:var(--primary-color)!important;box-shadow:none!important}
+        .btn-primary:hover{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-dark) 100%) !important}
+        .file-indicator{background:var(--primary-soft)!important;border-color:var(--primary-soft-strong)!important;color:var(--primary-color)!important}
+        .month-cell.has-value,.stage-tag.signed,.stage-tag.delivery,.stage-tag.acceptance,.priority-tag.low{background:var(--primary-soft)!important;color:var(--primary-color)!important}
+        .opp-stat-item,.opp-stat-item.cyan,.opp-stat-item.emerald{
+            background:#fff !important;
+            border:1px solid var(--primary-soft-strong) !important;
+            box-shadow:var(--shadow-sm) !important;
+        }
+        .opp-stat-item .stat-label,.opp-stat-item .stat-value,.opp-stat-item .stat-unit{
+            color:var(--primary-color) !important;
+            opacity:1 !important;
+        }
+        .win-rate-fill{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <!-- Babel -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <!-- SheetJS -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script type="text/babel">
+        const { useState, useRef } = React;
+
+        // 默认目标数据
+        const defaultTargetData = {
+            receivable: { total: 2000, custom: 1200, resource: 500, product: 300 },
+            signed: { total: 1500, custom: 900, resource: 400, product: 200 },
+            contract: { total: 800, custom: 500, resource: 200, product: 100 },
+            payment: { total: 600, custom: 350, resource: 150, product: 100 },
+            opportunity: { total: 500, existing: 300, gap: 200 },
+            pending: { total: 200, custom: 120, resource: 50, product: 30 }
+        };
+
+        // 默认项目定制合同数据
+        const defaultCustomContracts = [
+            { id: 1, project: '东锅APS项目', amount: 150, stage: '交付中', signDate: '2024-01', contractPay: 45, planPay: 30, onlinePay: 30, acceptPay: 30, warrantyPay: 15, todo: '完成二期开发' },
+            { id: 2, project: '核电MES系统', amount: 200, stage: '验收中', signDate: '2024-02', contractPay: 60, planPay: 40, onlinePay: 50, acceptPay: 40, warrantyPay: 10, todo: '准备验收材料' },
+            { id: 3, project: '风电计划系统', amount: 180, stage: '谈判中', signDate: '2024-03', contractPay: 54, planPay: 36, onlinePay: 45, acceptPay: 36, warrantyPay: 9, todo: '商务谈判' },
+            { id: 4, project: '北京PMO项目', amount: 120, stage: '已签订', signDate: '2024-01', contractPay: 36, planPay: 24, onlinePay: 30, acceptPay: 24, warrantyPay: 6, todo: '启动会准备' },
+        ];
+
+        // 默认人天类合同数据
+        const defaultDayContracts = [
+            { id: 1, project: 'IDME外包服务', amount: 80, stage: '交付中', signDate: '2024-01', months: [8, 8, 8, 8, 7, 7, 6, 6, 5, 5, 5, 7], todo: '人员补充' },
+            { id: 2, project: '金航数码项目', amount: 60, stage: '已签订', signDate: '2024-02', months: [0, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 10], todo: '按期交付' },
+            { id: 3, project: '东锅运维服务', amount: 40, stage: '验收中', signDate: '2023-12', months: [3, 3, 4, 4, 4, 4, 4, 3, 3, 3, 3, 2], todo: '运维报告' },
+        ];
+
+        // 默认商机数据
+        const defaultOpportunities = [
+            { id: 1, name: '东方锅炉数字化工厂', customer: '东方锅炉', owner: '张三', priority: '高', amount: 500, winRate: 80, expectedDate: '2024-06' },
+            { id: 2, name: '中车风电MES系统', customer: '中车风电', owner: '李四', priority: '高', amount: 350, winRate: 65, expectedDate: '2024-07' },
+            { id: 3, name: '国电投核电项目', customer: '国电投', owner: '王五', priority: '中', amount: 280, winRate: 50, expectedDate: '2024-08' },
+            { id: 4, name: '华能集团ERP升级', customer: '华能集团', owner: '赵六', priority: '中', amount: 200, winRate: 70, expectedDate: '2024-06' },
+            { id: 5, name: '大唐发电智能工厂', customer: '大唐发电', owner: '钱七', priority: '低', amount: 150, winRate: 40, expectedDate: '2024-09' },
+        ];
+
+        // 默认资源数据
+        const defaultResourceData = {
+            totalStaff: 15,
+            projectStaff: 12,
+            gap: 3
+        };
+
+        const getSheetNameV2 = (workbook, candidates) => candidates.find((name) => workbook.SheetNames.includes(name));
+        const toNumberV2 = (value, fallback = 0) => {
+            const num = Number(value);
+            return Number.isFinite(num) ? num : fallback;
+        };
+        const toTextV2 = (value, fallback = '') => {
+            if (value === null || value === undefined) return fallback;
+            const text = String(value).trim();
+            return text || fallback;
+        };
+
+        // 饼图组件
+        const PieChart = ({ data, colors, total, unit }) => {
+            const size = 100;
+            const center = size / 2;
+            const radius = 40;
+            const innerRadius = 25;
+
+            let currentAngle = -90;
+            const paths = [];
+
+            const totalValue = Object.values(data).reduce((a, b) => a + b, 0);
+
+            Object.entries(data).forEach(([key, value], index) => {
+                const angle = (value / totalValue) * 360;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + angle;
+
+                const startRad = (startAngle * Math.PI) / 180;
+                const endRad = (endAngle * Math.PI) / 180;
+
+                const x1 = center + radius * Math.cos(startRad);
+                const y1 = center + radius * Math.sin(startRad);
+                const x2 = center + radius * Math.cos(endRad);
+                const y2 = center + radius * Math.sin(endRad);
+
+                const x3 = center + innerRadius * Math.cos(endRad);
+                const y3 = center + innerRadius * Math.sin(endRad);
+                const x4 = center + innerRadius * Math.cos(startRad);
+                const y4 = center + innerRadius * Math.sin(startRad);
+
+                const largeArc = angle > 180 ? 1 : 0;
+
+                const pathD = `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x4} ${y4} Z`;
+
+                paths.push(
+                    <path key={key} d={pathD} fill={colors[index % colors.length]} />
+                );
+
+                currentAngle = endAngle;
+            });
+
+            return (
+                <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                    {paths}
+                </svg>
+            );
+        };
+
+        // 目标进展卡片
+        const TargetCard = ({ title, data, colors, labels, unit }) => {
+            const total = Object.values(data).reduce((a, b) => a + b, 0);
+
+            return (
+                <div className="pie-card">
+                    <div className="pie-title">{title}</div>
+                    <div className="pie-chart">
+                        <PieChart data={data} colors={colors} />
+                        <div className="pie-center">
+                            <div className="pie-value">{total}</div>
+                            <div className="pie-unit">{unit}</div>
+                        </div>
+                    </div>
+                    <div className="pie-legend">
+                        {Object.keys(data).map((key, idx) => (
+                            <span key={key} className="legend-item">
+                                <span className="legend-dot" style={{ background: colors[idx] }}></span>
+                                {labels[idx]}: {data[key]}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // 本年签约目标进展统计组件
+        const TargetProgressCard = ({ data }) => {
+            const colors = ['#0052d9', '#2f7bff', '#79a8ff', '#b9d3ff'];
+            const labels = ['定制交付', '资源总集', '产品/ODM', '其他'];
+
+            const opportunityColors = ['#0052d9', '#79a8ff', '#cfe0ff'];
+            const opportunityLabels = ['已有商机', '商机缺口', '其他'];
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">📈</span>
+                            本年签约目标进展
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="target-grid">
+                            <TargetCard
+                                title="本年应收目标"
+                                data={{ custom: data.receivable.custom, resource: data.receivable.resource, product: data.receivable.product, other: data.receivable.total - data.receivable.custom - data.receivable.resource - data.receivable.product }}
+                                colors={colors}
+                                labels={labels}
+                                unit="万"
+                            />
+                            <TargetCard
+                                title="本年签单目标"
+                                data={{ custom: data.signed.custom, resource: data.signed.resource, product: data.signed.product, other: data.signed.total - data.signed.custom - data.signed.resource - data.signed.product }}
+                                colors={colors}
+                                labels={labels}
+                                unit="万"
+                            />
+                            <TargetCard
+                                title="已签订合同"
+                                data={{ custom: data.contract.custom, resource: data.contract.resource, product: data.contract.product, other: data.contract.total - data.contract.custom - data.contract.resource - data.contract.product }}
+                                colors={colors}
+                                labels={labels}
+                                unit="万"
+                            />
+                            <TargetCard
+                                title="本年回款进度"
+                                data={{ custom: data.payment.custom, resource: data.payment.resource, product: data.payment.product, other: data.payment.total - data.payment.custom - data.payment.resource - data.payment.product }}
+                                colors={colors}
+                                labels={labels}
+                                unit="万"
+                            />
+                            <TargetCard
+                                title="线索商机缺口"
+                                data={{ existing: data.opportunity.existing, gap: data.opportunity.gap, other: Math.max(0, data.opportunity.total - data.opportunity.existing - data.opportunity.gap) }}
+                                colors={opportunityColors}
+                                labels={opportunityLabels}
+                                unit="万"
+                            />
+                            <TargetCard
+                                title="待签合同"
+                                data={{ custom: data.pending.custom, resource: data.pending.resource, product: data.pending.product, other: data.pending.total - data.pending.custom - data.pending.resource - data.pending.product }}
+                                colors={colors}
+                                labels={labels}
+                                unit="万"
+                            />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // LTC商机到回款组件
+        const LTCCard = ({ customContracts, dayContracts }) => {
+            const [activeTab, setActiveTab] = useState('custom');
+
+            const stageColors = {
+                '谈判中': 'negotiation',
+                '已签订': 'signed',
+                '交付中': 'delivery',
+                '验收中': 'acceptance'
+            };
+
+            const monthLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">💼</span>
+                            LTC商机到回款
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="tabs">
+                            <div
+                                className={`tab-item ${activeTab === 'custom' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('custom')}
+                            >
+                                项目定制合同
+                            </div>
+                            <div
+                                className={`tab-item ${activeTab === 'day' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('day')}
+                            >
+                                人天类合同
+                            </div>
+                        </div>
+
+                        {activeTab === 'custom' && (
+                            <div className="table-scroll">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>项目名称</th>
+                                            <th className="text-right">合同金额</th>
+                                            <th>所处阶段</th>
+                                            <th>合同时间</th>
+                                            <th className="text-right">合同款</th>
+                                            <th className="text-right">方案款</th>
+                                            <th className="text-right">上线款</th>
+                                            <th className="text-right">验收款</th>
+                                            <th className="text-right">质保款</th>
+                                            <th>当前待办</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {customContracts.map(item => (
+                                            <tr key={item.id}>
+                                                <td>{item.project}</td>
+                                                <td className="text-right amount">{item.amount}万</td>
+                                                <td>
+                                                    <span className={`stage-tag ${stageColors[item.stage] || 'negotiation'}`}>
+                                                        {item.stage}
+                                                    </span>
+                                                </td>
+                                                <td>{item.signDate}</td>
+                                                <td className="text-right">{item.contractPay}万</td>
+                                                <td className="text-right">{item.planPay}万</td>
+                                                <td className="text-right">{item.onlinePay}万</td>
+                                                <td className="text-right">{item.acceptPay}万</td>
+                                                <td className="text-right">{item.warrantyPay}万</td>
+                                                <td className="todo-text">{item.todo}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+
+                        {activeTab === 'day' && (
+                            <div className="table-scroll">
+                                <table className="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>项目名称</th>
+                                            <th className="text-right">合同金额</th>
+                                            <th>所处阶段</th>
+                                            <th>合同时间</th>
+                                            <th colSpan="12" className="text-center">月度回款（1-12月）</th>
+                                            <th>当前待办</th>
+                                        </tr>
+                                        <tr>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            <th></th>
+                                            {monthLabels.map(m => (
+                                                <th key={m} className="text-center" style={{ padding: '4px 2px', fontSize: '10px' }}>{m}</th>
+                                            ))}
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {dayContracts.map(item => (
+                                            <tr key={item.id}>
+                                                <td>{item.project}</td>
+                                                <td className="text-right amount">{item.amount}万</td>
+                                                <td>
+                                                    <span className={`stage-tag ${stageColors[item.stage] || 'negotiation'}`}>
+                                                        {item.stage}
+                                                    </span>
+                                                </td>
+                                                <td>{item.signDate}</td>
+                                                {item.months.map((val, idx) => (
+                                                    <td key={idx} className="text-center" style={{ padding: '4px 2px' }}>
+                                                        <span className={`month-cell ${val > 0 ? 'has-value' : ''}`}>{val || '-'}</span>
+                                                    </td>
+                                                ))}
+                                                <td className="todo-text">{item.todo}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // 重点商机盘点组件
+        const OpportunityCard = ({ opportunities }) => {
+            const totalCount = opportunities.length;
+            const totalAmount = opportunities.reduce((sum, item) => sum + item.amount, 0);
+            const ongoingCount = opportunities.filter(item => item.winRate >= 50).length;
+
+            const priorityColors = {
+                '高': 'high',
+                '中': 'medium',
+                '低': 'low'
+            };
+
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">🎯</span>
+                            重点商机盘点
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="opportunity-stats">
+                            <div className="opp-stat-item">
+                                <div className="stat-label">商机总数</div>
+                                <div className="stat-value">{totalCount}<span className="stat-unit">个</span></div>
+                            </div>
+                            <div className="opp-stat-item cyan">
+                                <div className="stat-label">总计金额</div>
+                                <div className="stat-value">{totalAmount}<span className="stat-unit">万</span></div>
+                            </div>
+                            <div className="opp-stat-item emerald">
+                                <div className="stat-label">进行中</div>
+                                <div className="stat-value">{ongoingCount}<span className="stat-unit">个</span></div>
+                            </div>
+                        </div>
+
+                        <div className="table-scroll">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>商机名称</th>
+                                        <th>客户名称</th>
+                                        <th>商务/渠道</th>
+                                        <th>优先级</th>
+                                        <th className="text-right">预估金额</th>
+                                        <th>赢单率</th>
+                                        <th>预计签订</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {opportunities.map(item => (
+                                        <tr key={item.id}>
+                                            <td>{item.name}</td>
+                                            <td>{item.customer}</td>
+                                            <td>{item.owner}</td>
+                                            <td>
+                                                <span className={`priority-tag ${priorityColors[item.priority] || 'medium'}`}>
+                                                    {item.priority}
+                                                </span>
+                                            </td>
+                                            <td className="text-right amount">{item.amount}万</td>
+                                            <td>
+                                                <div className="win-rate">
+                                                    <div className="win-rate-bar">
+                                                        <div className="win-rate-fill" style={{ width: `${item.winRate}%` }}></div>
+                                                    </div>
+                                                    <span className="win-rate-text">{item.winRate}%</span>
+                                                </div>
+                                            </td>
+                                            <td>{item.expectedDate}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 部门资源统计组件
+        const ResourceCard = ({ data }) => {
+            return (
+                <div className="card">
+                    <div className="card-header">
+                        <div className="card-title">
+                            <span className="icon">👥</span>
+                            部门投入资源
+                        </div>
+                    </div>
+                    <div className="card-body">
+                        <div className="resource-stats">
+                            <div className="resource-item">
+                                <span className="label">当前部门人数</span>
+                                <span className="value">{data.totalStaff} 人</span>
+                            </div>
+                            <div className="resource-item">
+                                <span className="label">支撑项目人员</span>
+                                <span className="value success">{data.projectStaff} 人</span>
+                            </div>
+                            <div className="resource-item">
+                                <span className="label">人员缺口</span>
+                                <span className="value danger">{data.gap} 人</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 主应用组件
+        const App = () => {
+            const [targetData, setTargetData] = useState(defaultTargetData);
+            const [customContracts, setCustomContracts] = useState(defaultCustomContracts);
+            const [dayContracts, setDayContracts] = useState(defaultDayContracts);
+            const [opportunities, setOpportunities] = useState(defaultOpportunities);
+            const [resourceData, setResourceData] = useState(defaultResourceData);
+            const [fileName, setFileName] = useState('');
+            const fileInputRef = useRef(null);
+            const updateTime = (() => {
+                const now = new Date();
+                const pad = (num) => String(num).padStart(2, '0');
+                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
+            })();
+
+            const handleFileUploadV2 = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                setFileName(file.name);
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = event.target.result;
+                        const workbook = XLSX.read(data, { type: 'binary' });
+
+                        const targetSheetName = getSheetNameV2(workbook, ['目标进展']);
+                        if (targetSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheetName]);
+                            if (rows.length > 0) {
+                                const row = rows[0];
+                                setTargetData({
+                                    receivable: {
+                                        total: toNumberV2(row['应收总目标']),
+                                        custom: toNumberV2(row['应收-定制交付']),
+                                        resource: toNumberV2(row['应收-资源整合']),
+                                        product: toNumberV2(row['应收-产品ODM'])
+                                    },
+                                    signed: {
+                                        total: toNumberV2(row['签单总目标']),
+                                        custom: toNumberV2(row['签单-定制交付']),
+                                        resource: toNumberV2(row['签单-资源整合']),
+                                        product: toNumberV2(row['签单-产品ODM'])
+                                    },
+                                    contract: {
+                                        total: toNumberV2(row['已签合同总额']),
+                                        custom: toNumberV2(row['合同-定制交付']),
+                                        resource: toNumberV2(row['合同-资源整合']),
+                                        product: toNumberV2(row['合同-产品ODM'])
+                                    },
+                                    payment: {
+                                        total: toNumberV2(row['回款总额']),
+                                        custom: toNumberV2(row['回款-定制交付']),
+                                        resource: toNumberV2(row['回款-资源整合']),
+                                        product: toNumberV2(row['回款-产品ODM'])
+                                    },
+                                    opportunity: {
+                                        total: toNumberV2(row['商机总额']),
+                                        existing: toNumberV2(row['已有商机']),
+                                        gap: toNumberV2(row['商机缺口'])
+                                    },
+                                    pending: {
+                                        total: toNumberV2(row['待签合同总额']),
+                                        custom: toNumberV2(row['待签-定制交付']),
+                                        resource: toNumberV2(row['待签-资源整合']),
+                                        product: toNumberV2(row['待签-产品ODM'])
+                                    }
+                                });
+                            }
+                        }
+
+                        const customSheetName = getSheetNameV2(workbook, ['定制合同']);
+                        if (customSheetName) {
+                            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[customSheetName]);
+                            if (jsonData.length > 0) {
+                                setCustomContracts(jsonData.map((row, idx) => ({
+                                    id: idx + 1,
+                                    project: toTextV2(row['项目名称']),
+                                    amount: toNumberV2(row['合同金额']),
+                                    stage: toTextV2(row['所处阶段']),
+                                    signDate: toTextV2(row['合同时间']),
+                                    contractPay: toNumberV2(row['合同款']),
+                                    planPay: toNumberV2(row['方案款']),
+                                    onlinePay: toNumberV2(row['上线款']),
+                                    acceptPay: toNumberV2(row['验收款']),
+                                    warrantyPay: toNumberV2(row['质保款']),
+                                    todo: toTextV2(row['当前待办'])
+                                })));
+                            }
+                        }
+
+                        const daySheetName = getSheetNameV2(workbook, ['人天合同']);
+                        if (daySheetName) {
+                            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[daySheetName]);
+                            if (jsonData.length > 0) {
+                                setDayContracts(jsonData.map((row, idx) => ({
+                                    id: idx + 1,
+                                    project: toTextV2(row['项目名称']),
+                                    amount: toNumberV2(row['合同金额']),
+                                    stage: toTextV2(row['所处阶段']),
+                                    signDate: toTextV2(row['合同时间']),
+                                    months: [
+                                        toNumberV2(row['1月']), toNumberV2(row['2月']), toNumberV2(row['3月']),
+                                        toNumberV2(row['4月']), toNumberV2(row['5月']), toNumberV2(row['6月']),
+                                        toNumberV2(row['7月']), toNumberV2(row['8月']), toNumberV2(row['9月']),
+                                        toNumberV2(row['10月']), toNumberV2(row['11月']), toNumberV2(row['12月'])
+                                    ],
+                                    todo: toTextV2(row['当前待办'])
+                                })));
+                            }
+                        }
+
+                        const opportunitySheetName = getSheetNameV2(workbook, ['商机盘点']);
+                        if (opportunitySheetName) {
+                            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[opportunitySheetName]);
+                            if (jsonData.length > 0) {
+                                setOpportunities(jsonData.map((row, idx) => ({
+                                    id: idx + 1,
+                                    name: toTextV2(row['商机名称']),
+                                    customer: toTextV2(row['客户名称']),
+                                    owner: toTextV2(row['商务/渠道']),
+                                    priority: toTextV2(row['优先级'], '中'),
+                                    amount: toNumberV2(row['预估金额']),
+                                    winRate: toNumberV2(row['赢单率'], 50),
+                                    expectedDate: toTextV2(row['预计签订时间'])
+                                })));
+                            }
+                        }
+
+                        const resourceSheetName = getSheetNameV2(workbook, ['资源情况']);
+                        if (resourceSheetName) {
+                            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[resourceSheetName]);
+                            if (rows.length > 0) {
+                                const row = rows[0];
+                                setResourceData({
+                                    totalStaff: toNumberV2(row['当前部门人数']),
+                                    projectStaff: toNumberV2(row['支撑项目人员']),
+                                    gap: toNumberV2(row['人员缺口'])
+                                });
+                            }
+                        }
+
+                    } catch (error) {
+                        console.error('解析Excel失败:', error);
+                        alert('解析Excel文件失败，请检查文件格式');
+                    }
+                };
+
+                reader.readAsBinaryString(file);
+            };
+
+            return (
+                <div className="page-container">
+                    <div className="top-bar">
+                        <div className="detail-meta">
+                            <span>所属部门：<strong>解决方案部</strong></span>
+                            <span>更新时间：<strong>{updateTime}</strong></span>
+                        </div>
+                        <div className="actions">
+                            <a
+                                className="btn btn-outline"
+                                href="../作战室数据导入模板/解决方案部-数据导入模板V2.xlsx"
+                                download
+                            >
+                                <span>↓</span>
+                                下载模板
+                            </a>
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                accept=".xls,.xlsx"
+                                onChange={handleFileUploadV2}
+                                style={{ display: 'none' }}
+                            />
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => fileInputRef.current.click()}
+                            >
+                                <span>📤</span>
+                                导入周报数据
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="main-layout">
+                        <div className="left-sidebar">
+                            <TargetProgressCard data={targetData} />
+                            <ResourceCard data={resourceData} />
+                        </div>
+                        <div className="right-content">
+                            <LTCCard customContracts={customContracts} dayContracts={dayContracts} />
+                            <OpportunityCard opportunities={opportunities} />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // 渲染应用
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
