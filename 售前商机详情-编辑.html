@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>售前商机详情-编辑</title>
+  <style>
+    :root{--bg:#f5f8fe;--panel:#fff;--soft:#f8fafc;--line:#dbe5f1;--text:#0f172a;--sub:#526077;--blue:#0052d9;--blue-dark:#003a99;--red:#dc2626;--shadow:0 12px 30px -24px rgba(15,23,42,.28);--radius:14px}
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+    .page{max-width:1520px;margin:0 auto;padding:18px}.topbar,.head,.repeat-head,.sticky{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.topbar{flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}.title h1{font-size:22px;line-height:1.2}.title p,.status{font-size:12px;color:var(--sub)}.actions{display:flex;gap:10px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.panel.full{grid-column:1/-1}.head{padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)}.panel-title{font-size:16px;font-weight:800}.panel-sub{font-size:12px;color:var(--sub)}.body{padding:14px}
+    .grid-2,.grid-3,.grid-4,.grid-6{display:grid;gap:12px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .field,.repeat-row,.subblock{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}.field label,.mini-title{display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)} .field label{cursor:help} input,select,textarea{width:100%;padding:8px 10px;border:1px solid #cfd9e5;border-radius:10px;background:#fff;font-size:13px;color:var(--text);outline:none} textarea{min-height:80px;resize:vertical}
+    .repeat-list{display:flex;flex-direction:column;gap:10px}.repeat-head{margin-bottom:8px}.repeat-title{font-size:12px;font-weight:800;color:var(--sub)} .btn,.mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;text-decoration:none;font-weight:700}.btn{height:36px;padding:0 14px;font-size:13px}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}.mini-btn{height:30px;padding:0 12px;font-size:12px;color:var(--blue)}.mini-btn.danger{color:var(--red)}.section{margin-top:14px}.sticky{position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+    @media (max-width:1080px){.layout,.grid-4,.grid-6,.grid-3{grid-template-columns:1fr 1fr}} @media (max-width:720px){.layout,.grid-6,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.sticky,.topbar{flex-direction:column;align-items:stretch}}
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>售前商机详情编辑</h1>
+        <p>保存后同步更新“解决方案部数据看板”，覆盖当前页面所有展示字段。</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="./解决方案部数据看板.html" target="_blank" rel="noopener noreferrer">查看看板</a>
+        <button class="btn btn-primary" type="button" id="save-top">保存</button>
+      </div>
+    </div>
+    <form><div id="app"></div></form>
+    <div class="sticky">
+      <div id="status" class="status">未保存修改。</div>
+      <div class="actions">
+        <button class="btn" type="button" id="reset-btn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="save-bottom">保存并更新看板</button>
+      </div>
+    </div>
+  </div>
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const clone=(v)=>JSON.parse(JSON.stringify(v));
+    const now=()=>{const d=new Date(),p=(n)=>String(n).padStart(2,"0");return `${d.getFullYear()}年${p(d.getMonth()+1)}月${p(d.getDate())}日 ${p(d.getHours())}:${p(d.getMinutes())}`;};
+    const num=(v,f=0)=>{const n=Number(String(v??"").replace(/,/g,"").trim());return Number.isFinite(n)?n:f;};
+    const text=(v,f="")=>{const t=String(v??"").trim();return t||f;};
+    const blankState=()=>({targetData:{receivable:{total:0,custom:0,resource:0,product:0},signed:{total:0,custom:0,resource:0,product:0},contract:{total:0,custom:0,resource:0,product:0},payment:{total:0,custom:0,resource:0,product:0},opportunity:{total:0,existing:0,gap:0},pending:{total:0,custom:0,resource:0,product:0}},customContracts:[],dayContracts:[],opportunities:[],resourceData:{totalStaff:0,projectStaff:0,gap:0},riskSummary:[{category:"",summary:"",level:"一般"}],fileName:"表单编辑保存",updateTime:now()});
+    const buildSolutionIndexSource=(pageState)=>({key:"solution",updateTime:pageState.updateTime,fileName:pageState.fileName,targetData:pageState.targetData,customContracts:pageState.customContracts,dayContracts:pageState.dayContracts,opportunities:pageState.opportunities,resourceData:pageState.resourceData,riskSummary:pageState.riskSummary});
+    const app=document.getElementById("app"),statusEl=document.getElementById("status");
+    let currentState=window.DashboardSync?window.DashboardSync.getStoredPageState("solution",blankState()):blankState();
+    const initialState=clone(currentState);
+    const panel=(title,sub,body,full=false)=>`<section class="panel${full?" full":""}"><div class="head"><div><div class="panel-title">${title}</div><div class="panel-sub">${sub}</div></div></div><div class="body">${body}</div></section>`;
+    const field=(label,id,value,type="text")=>`<div class="field"><label for="${id}">${label}</label>${type==="textarea"?`<textarea id="${id}">${String(value??"")}</textarea>`:`<input id="${id}" type="${type}" value="${type==="number"?num(value):String(value??"")}">`}</div>`;
+    const selectField=(label,id,value,options)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${options.map((item)=>`<option value="${item.value}"${item.value===value?" selected":""}>${item.label}</option>`).join("")}</select></div>`;
+    const renderRiskSummary=(items)=>`<div class="repeat-list" data-list="risk-summary">${items.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">风险概述 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="risk-summary" data-index="${index}">删除</button></div><div class="grid-3">${field("风险类别",`risk-category-${index}`,item.category)}${field("风险概述",`risk-summary-${index}`,item.summary,"textarea")}${selectField("风险等级",`risk-level-${index}`,item.level,[{value:"严重",label:"严重"},{value:"一般",label:"一般"},{value:"轻度",label:"轻度"}])}</div></div>`).join("")}</div>`;
+    function plainText(value){return String(value??"").replace(/\s+/g," ").trim();}
+    function applyFieldTooltips(){
+      document.querySelectorAll(".field").forEach((fieldEl)=>{
+        const labelEl=fieldEl.querySelector("label");
+        const controlEl=fieldEl.querySelector("input, select, textarea");
+        if(!labelEl||!controlEl)return;
+        const labelText=plainText(labelEl.textContent);
+        const panelTitle=plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent)||"当前编辑区";
+        const rowTitle=plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-title")?.textContent);
+        const scopeParts=[panelTitle];
+        if(rowTitle)scopeParts.push(rowTitle);
+        const tooltip=`字段：${labelText}。位置：${scopeParts.join(" / ")}。用途：用于配置看板中“${panelTitle}”区域的对应显示内容。`;
+        fieldEl.title=tooltip;
+        labelEl.title=tooltip;
+        controlEl.title=tooltip;
+      });
+    }
+    function render(){
+      const s=currentState;
+      app.innerHTML=`<div class="layout">
+        ${panel("基本设置","配置保存来源名",`<div class="grid-2">${field("来源文件名","file-name",s.fileName||"表单编辑保存")}</div>`)}
+        ${panel("目标进展","对应售前商机详情左上目标卡片",`<div class="grid-3">${["receivable","signed","contract","payment","opportunity","pending"].map((key)=>{const labelMap={receivable:"应收",signed:"签单",contract:"合同",payment:"回款",opportunity:"商机",pending:"待签"};const item=s.targetData[key]||{};const extra=key==="opportunity"?`${field("总额",`${key}-total`,item.total,"number")}${field("已有",`${key}-existing`,item.existing,"number")}${field("缺口",`${key}-gap`,item.gap,"number")}`:`${field("总额",`${key}-total`,item.total,"number")}${field("定制交付",`${key}-custom`,item.custom,"number")}${field("资源整合",`${key}-resource`,item.resource,"number")}${field("产品ODM",`${key}-product`,item.product,"number")}`;return `<div class="subblock"><div class="mini-title">${labelMap[key]}</div><div class="grid-2">${extra}</div></div>`;}).join("")}</div>`,true)}
+        ${panel("定制合同","对应定制交付合同列表",`<div class="repeat-head"><div class="mini-title">定制合同</div><button class="mini-btn" type="button" data-add="custom-contracts">新增合同</button></div><div class="repeat-list" data-list="custom-contracts">${s.customContracts.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">合同 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="custom-contracts" data-index="${index}">删除</button></div><div class="grid-4">${field("项目名称",`custom-project-${index}`,item.project)}${field("合同金额(万)",`custom-amount-${index}`,item.amount,"number")}${field("所处阶段",`custom-stage-${index}`,item.stage)}${field("合同时间",`custom-signDate-${index}`,item.signDate)}${field("合同款",`custom-contractPay-${index}`,item.contractPay,"number")}${field("方案款",`custom-planPay-${index}`,item.planPay,"number")}${field("上线款",`custom-onlinePay-${index}`,item.onlinePay,"number")}${field("验收款",`custom-acceptPay-${index}`,item.acceptPay,"number")}${field("质保款",`custom-warrantyPay-${index}`,item.warrantyPay,"number")}${field("当前待办",`custom-todo-${index}`,item.todo,"textarea")}</div></div>`).join("")}</div>`,true)}
+        ${panel("人天合同","对应人天合同列表",`<div class="repeat-head"><div class="mini-title">人天合同</div><button class="mini-btn" type="button" data-add="day-contracts">新增合同</button></div><div class="repeat-list" data-list="day-contracts">${s.dayContracts.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">人天合同 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="day-contracts" data-index="${index}">删除</button></div><div class="grid-4">${field("项目名称",`day-project-${index}`,item.project)}${field("合同金额(万)",`day-amount-${index}`,item.amount,"number")}${field("所处阶段",`day-stage-${index}`,item.stage)}${field("合同时间",`day-signDate-${index}`,item.signDate)}</div><div class="section"><div class="mini-title">月份人天</div><div class="grid-6">${Array.from({length:12},(_,monthIndex)=>field(`${monthIndex+1}月`,`day-month-${index}-${monthIndex}`,item.months?.[monthIndex]||0,"number")).join("")}</div></div><div class="section">${field("当前待办",`day-todo-${index}`,item.todo,"textarea")}</div></div>`).join("")}</div>`,true)}
+        ${panel("商机盘点","对应右下商机列表",`<div class="repeat-head"><div class="mini-title">商机条目</div><button class="mini-btn" type="button" data-add="opportunities">新增商机</button></div><div class="repeat-list" data-list="opportunities">${s.opportunities.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">商机 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="opportunities" data-index="${index}">删除</button></div><div class="grid-4">${field("商机名称",`opp-name-${index}`,item.name)}${field("客户",`opp-customer-${index}`,item.customer)}${field("负责人",`opp-owner-${index}`,item.owner)}${selectField("优先级",`opp-priority-${index}`,item.priority,[{value:"高",label:"高"},{value:"中",label:"中"},{value:"低",label:"低"}])}${field("金额(万)",`opp-amount-${index}`,item.amount,"number")}${field("赢率(%)",`opp-winRate-${index}`,item.winRate,"number")}${field("预计签约时间",`opp-expectedDate-${index}`,item.expectedDate)}</div></div>`).join("")}</div>`)}
+        ${panel("资源情况","对应左下资源卡片",`<div class="grid-3">${field("总人数","resource-totalStaff",s.resourceData.totalStaff,"number")}${field("项目支持人数","resource-projectStaff",s.resourceData.projectStaff,"number")}${field("人员缺口","resource-gap",s.resourceData.gap,"number")}</div>`)}
+        ${panel("首页风险概述","对应首页售前商机卡片风险提示",`<div class="repeat-head"><div class="mini-title">风险概述</div><button class="mini-btn" type="button" data-add="risk-summary">新增概述</button></div>${renderRiskSummary(s.riskSummary)}`)}
+      </div>`;
+      applyFieldTooltips();
+    }
+    function collectState(){
+      const mapTarget=(key)=>key==="opportunity"?{total:num(document.getElementById(`${key}-total`).value),existing:num(document.getElementById(`${key}-existing`).value),gap:num(document.getElementById(`${key}-gap`).value)}:{total:num(document.getElementById(`${key}-total`).value),custom:num(document.getElementById(`${key}-custom`).value),resource:num(document.getElementById(`${key}-resource`).value),product:num(document.getElementById(`${key}-product`).value)};
+      return {
+        fileName:text(document.getElementById("file-name").value,"表单编辑保存"),
+        updateTime:now(),
+        targetData:{receivable:mapTarget("receivable"),signed:mapTarget("signed"),contract:mapTarget("contract"),payment:mapTarget("payment"),opportunity:mapTarget("opportunity"),pending:mapTarget("pending")},
+        customContracts:Array.from(document.querySelectorAll('[data-list="custom-contracts"] .repeat-row')).map((row,index)=>({id:index+1,project:text(document.getElementById(`custom-project-${index}`).value),amount:num(document.getElementById(`custom-amount-${index}`).value),stage:text(document.getElementById(`custom-stage-${index}`).value),signDate:text(document.getElementById(`custom-signDate-${index}`).value),contractPay:num(document.getElementById(`custom-contractPay-${index}`).value),planPay:num(document.getElementById(`custom-planPay-${index}`).value),onlinePay:num(document.getElementById(`custom-onlinePay-${index}`).value),acceptPay:num(document.getElementById(`custom-acceptPay-${index}`).value),warrantyPay:num(document.getElementById(`custom-warrantyPay-${index}`).value),todo:text(document.getElementById(`custom-todo-${index}`).value)})).filter((item)=>item.project),
+        dayContracts:Array.from(document.querySelectorAll('[data-list="day-contracts"] .repeat-row')).map((row,index)=>({id:index+1,project:text(document.getElementById(`day-project-${index}`).value),amount:num(document.getElementById(`day-amount-${index}`).value),stage:text(document.getElementById(`day-stage-${index}`).value),signDate:text(document.getElementById(`day-signDate-${index}`).value),months:Array.from({length:12},(_,monthIndex)=>num(document.getElementById(`day-month-${index}-${monthIndex}`).value)),todo:text(document.getElementById(`day-todo-${index}`).value)})).filter((item)=>item.project),
+        opportunities:Array.from(document.querySelectorAll('[data-list="opportunities"] .repeat-row')).map((row,index)=>({id:index+1,name:text(document.getElementById(`opp-name-${index}`).value),customer:text(document.getElementById(`opp-customer-${index}`).value),owner:text(document.getElementById(`opp-owner-${index}`).value),priority:text(document.getElementById(`opp-priority-${index}`).value,"中"),amount:num(document.getElementById(`opp-amount-${index}`).value),winRate:num(document.getElementById(`opp-winRate-${index}`).value),expectedDate:text(document.getElementById(`opp-expectedDate-${index}`).value)})).filter((item)=>item.name),
+        resourceData:{totalStaff:num(document.getElementById("resource-totalStaff").value),projectStaff:num(document.getElementById("resource-projectStaff").value),gap:num(document.getElementById("resource-gap").value)},
+        riskSummary:Array.from(document.querySelectorAll('[data-list="risk-summary"] .repeat-row')).map((row,index)=>({category:text(document.getElementById(`risk-category-${index}`).value),summary:text(document.getElementById(`risk-summary-${index}`).value),level:text(document.getElementById(`risk-level-${index}`).value,"一般")})).filter((item)=>item.category||item.summary)
+      };
+    }
+    function addItem(type){
+      currentState=collectState();
+      if(type==="custom-contracts") currentState.customContracts.push({id:Date.now(),project:"",amount:0,stage:"",signDate:"",contractPay:0,planPay:0,onlinePay:0,acceptPay:0,warrantyPay:0,todo:""});
+      if(type==="day-contracts") currentState.dayContracts.push({id:Date.now(),project:"",amount:0,stage:"",signDate:"",months:Array(12).fill(0),todo:""});
+      if(type==="opportunities") currentState.opportunities.push({id:Date.now(),name:"",customer:"",owner:"",priority:"中",amount:0,winRate:0,expectedDate:""});
+      if(type==="risk-summary") currentState.riskSummary.push({category:"",summary:"",level:"一般"});
+      render();
+    }
+    function removeItem(type,index){
+      currentState=collectState();
+      if(type==="custom-contracts") currentState.customContracts.splice(index,1);
+      if(type==="day-contracts") currentState.dayContracts.splice(index,1);
+      if(type==="opportunities") currentState.opportunities.splice(index,1);
+      if(type==="risk-summary") currentState.riskSummary.splice(index,1);
+      render();
+    }
+    function saveData(){
+      currentState=collectState();
+      if(!window.DashboardSync){statusEl.textContent="保存失败：未检测到同步组件。";return;}
+      window.DashboardSync.persistDepartment("solution",currentState,buildSolutionIndexSource(currentState));
+      statusEl.textContent=`已保存并同步售前商机看板，更新时间：${currentState.updateTime}`;
+    }
+    document.addEventListener("click",(event)=>{const addType=event.target.getAttribute("data-add"),removeType=event.target.getAttribute("data-remove");if(addType){addItem(addType);return;}if(removeType){removeItem(removeType,num(event.target.getAttribute("data-index")));}});
+    document.getElementById("save-top").addEventListener("click",saveData);
+    document.getElementById("save-bottom").addEventListener("click",saveData);
+    document.getElementById("reset-btn").addEventListener("click",()=>{currentState=clone(initialState);render();statusEl.textContent="已恢复为打开编辑页时的数据，请重新保存。";});
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status");
+      ["save-top","save-bottom"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

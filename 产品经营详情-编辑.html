@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>产品经营详情-编辑</title>
+  <style>
+    :root{--bg:#f5f8fe;--panel:#fff;--soft:#f8fafc;--line:#dbe5f1;--text:#0f172a;--sub:#526077;--muted:#8c97aa;--blue:#0052d9;--blue-dark:#003a99;--red:#dc2626;--shadow:0 12px 30px -24px rgba(15,23,42,.28);--radius:14px}
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+    .page{max-width:1540px;margin:0 auto;padding:18px}.topbar,.row,.head,.repeat-head,.sticky,.actions,.grid-2,.grid-3,.grid-4{display:flex;gap:12px}.topbar,.head,.repeat-head,.sticky{justify-content:space-between;align-items:flex-start}.topbar{flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}.title h1{font-size:22px;line-height:1.2}.title p,.hint,.status{font-size:12px;color:var(--sub)}.layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.panel.full{grid-column:1/-1}.head{padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)}.panel-title{font-size:16px;font-weight:800}.panel-sub{font-size:12px;color:var(--sub)}.body{padding:14px}.grid-2,.grid-3,.grid-4{display:grid}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .field,.repeat-row,.subblock{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}.field label,.mini-title{display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)} .field label{cursor:help} input,select,textarea{width:100%;padding:8px 10px;border:1px solid #cfd9e5;border-radius:10px;background:#fff;font-size:13px;color:var(--text);outline:none} textarea{min-height:86px;resize:vertical} input:focus,select:focus,textarea:focus{border-color:var(--blue)}
+    .section{margin-top:14px}.section:first-child{margin-top:0}.repeat-list{display:flex;flex-direction:column;gap:10px}.repeat-head{margin-bottom:8px}.repeat-title{font-size:12px;font-weight:800;color:var(--sub)}.subgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.road-focus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px}
+    .btn,.mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;text-decoration:none;font-weight:700}.btn{height:36px;padding:0 14px;font-size:13px}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}.mini-btn{height:30px;padding:0 12px;font-size:12px;color:var(--blue)}.mini-btn.danger{color:var(--red)}
+    .sticky{position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+    @media (max-width:1080px){.layout,.grid-4,.grid-3,.subgrid,.road-focus{grid-template-columns:1fr 1fr}}
+    @media (max-width:720px){.layout,.grid-4,.grid-3,.grid-2,.subgrid,.road-focus{grid-template-columns:1fr}.sticky,.topbar{flex-direction:column;align-items:stretch}}
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>产品经营详情编辑</h1>
+        <p>保存后会同步更新“产品研发部数据看板”，不改变原有看板布局，只更新展示数据。</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="./产品研发部数据看板.html" target="_blank" rel="noopener noreferrer">查看看板</a>
+        <button class="btn btn-primary" type="button" id="save-top">保存</button>
+      </div>
+    </div>
+    <form id="editor-form"><div id="app"></div></form>
+    <div class="sticky">
+      <div id="status" class="status">未保存修改。</div>
+      <div class="actions">
+        <button class="btn" type="button" id="reset-btn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="save-bottom">保存并更新看板</button>
+      </div>
+    </div>
+  </div>
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const defaultState={topMetrics:[{label:"本月版本窗口",value:"3 个",desc:"PMS、客服平台与 OpenClaw 均有关键版本节点",cls:"blue"},{label:"需重点跟踪产品",value:"2 条",desc:"OpenClaw 性能资源、供应链平台技术路线",cls:"amber"},{label:"经营转化重点",value:"PMS",desc:"商机引用最高，预计转化收入贡献占比 42%",cls:"purple"},{label:"团队负荷状态",value:"可控",desc:"供应链平台资源偏紧，其余产品线节奏稳定",cls:"green"},{label:"关键产品路标达成率",value:"78%",desc:"4 条产品线中 3 条按计划推进",cls:"blue"},{label:"在途商机预计总额",value:"¥4,360万",desc:"23 个商机正在引用产品能力",cls:"purple"},{label:"关联项目预计营收",value:"¥2,180万",desc:"8 个重点项目已绑定产品交付",cls:"green"},{label:"当前高优 Bug",value:"9",desc:"较上周下降 2 个，供应链平台仍承压",cls:"amber"},{label:"研发团队平均人效",value:"91%",desc:"客服平台与 PMS 人效最高",cls:"blue"}],roadmap:[{product:"PMS 产品中台",owner:"刘晨",phase:"Q2 主版本推进",progress:82,health:"good",healthLabel:"健康",next:"4 月底完成 v3.2 发布评审",milestones:[{quarter:"Q1",version:"v3.0",desc:"多组织与流程引擎",status:"done"},{quarter:"Q2",version:"v3.2",desc:"主数据与 ERP 连接器",status:"active"},{quarter:"Q3",version:"v3.5",desc:"制造排产优化",status:""},{quarter:"Q4",version:"v4.0",desc:"行业组件市场",status:""}],focus:["ERP 适配器封板中","主数据建模完成 90%","客户联合验收已排期"]},{product:"OpenClaw 智能助手",owner:"严菲",phase:"Q2 商业化版本",progress:68,health:"warn",healthLabel:"关注",next:"5 月上旬完成 MCP 接入与测试扩容",milestones:[{quarter:"Q1",version:"v2.1",desc:"知识检索与问答发布",status:"done"},{quarter:"Q2",version:"v2.3",desc:"MCP + 多工具编排",status:"active"},{quarter:"Q3",version:"v3.0",desc:"代理工作流开放平台",status:""},{quarter:"Q4",version:"v3.5",desc:"行业模型包集成",status:""}],focus:["性能压测资源偏紧","商业化封装已完成","RAG 响应优化进行中"]},{product:"供应链协同平台",owner:"许知远",phase:"Q2 版本重排",progress:54,health:"risk",healthLabel:"风险",next:"4 月 22 日前完成技术路线决策",milestones:[{quarter:"Q1",version:"v1.0",desc:"业务蓝图与原型确认",status:"done"},{quarter:"Q2",version:"v1.3",desc:"一期上线范围冻结",status:"active"},{quarter:"Q3",version:"v2.0",desc:"采购计划与库存协同",status:""},{quarter:"Q4",version:"v2.5",desc:"供应商生态接入",status:""}],focus:["微服务/单体方案待拍板","需求变更率高于目标线","重点客户交付窗口受影响"]},{product:"客服平台",owner:"陈霄",phase:"Q2 稳定交付",progress:76,health:"good",healthLabel:"健康",next:"4 月中旬交付二期验收包",milestones:[{quarter:"Q1",version:"v1.8",desc:"坐席与工单整合",status:"done"},{quarter:"Q2",version:"v2.0",desc:"智能质检与知识推荐",status:"active"},{quarter:"Q3",version:"v2.3",desc:"全渠道服务分析",status:""},{quarter:"Q4",version:"v3.0",desc:"客服 Copilot",status:""}],focus:["质量指标稳定","联调完成 85%","项目回款预期较好"]}],business:{upstreamRows:[{product:"PMS 产品中台",opportunityCount:9,amount:1680,fit:88,relatedProjects:3,revenue:920,note:"ERP 扩展需求增多"},{product:"OpenClaw 智能助手",opportunityCount:7,amount:1140,fit:81,relatedProjects:2,revenue:460,note:"商业化集成窗口紧"},{product:"供应链协同平台",opportunityCount:4,amount:980,fit:69,relatedProjects:2,revenue:520,note:"定制需求集中"},{product:"客服平台",opportunityCount:3,amount:560,fit:90,relatedProjects:1,revenue:280,note:"风险可控"}],downstreamRows:[{project:"智慧工厂数字化",product:"PMS + OpenClaw",progress:84,fit:87,revenue:680,node:"5 月验收",status:"good"},{project:"新能源 ERP 治理",product:"PMS",progress:76,fit:91,revenue:420,node:"6 月上线",status:"good"},{project:"MES 升级改造",product:"PMS",progress:63,fit:72,revenue:350,node:"7 月交付",status:"warn"},{project:"供应链协同一期",product:"供应链协同平台",progress:58,fit:65,revenue:430,node:"范围待确认",status:"risk"},{project:"客服平台二期",product:"客服平台 + OpenClaw",progress:81,fit:86,revenue:300,node:"4 月验收",status:"good"}]},quality:{rows:[{product:"PMS 产品中台",blocker:0,major:2,minor:8,closeRate:91,owner:"陈涛"},{product:"OpenClaw 智能助手",blocker:1,major:2,minor:7,closeRate:84,owner:"严菲"},{product:"供应链协同平台",blocker:1,major:3,minor:9,closeRate:73,owner:"许知远"},{product:"客服平台",blocker:0,major:0,minor:5,closeRate:94,owner:"陈霄"}],items:[{title:"质量焦点 1",desc:"供应链协同平台当前有 1 个阻塞级与 3 个严重级 Bug，主要集中在采购流程回写与库存同步链路。"},{title:"质量焦点 2",desc:"OpenClaw 在高并发问答场景下仍存在响应峰值抖动，建议将压测资源与回归测试资源拆分保障。"},{title:"质量焦点 3",desc:"PMS 与客服平台保持稳定，版本回归一次通过率均高于 90%，可作为标准化交付样板。"}]},team:{rows:[{product:"PMS 产品中台",pm:3,fe:4,be:2,qa:2,total:9,efficiency:95},{product:"OpenClaw 智能助手",pm:2,fe:4,be:2,qa:2,total:8,efficiency:89},{product:"供应链协同平台",pm:2,fe:3,be:1,qa:1,total:6,efficiency:74},{product:"客服平台",pm:2,fe:2,be:1,qa:1,total:5,efficiency:96}],items:[{title:"人效观察",desc:"客服平台与 PMS 团队节奏最稳，迭代承诺兑现率分别达到 96% 与 95%。"},{title:"资源风险",desc:"供应链平台当前后端与测试共享资源较多，若范围不收敛会继续稀释人效。"},{title:"组织建议",desc:"建议将 OpenClaw 的平台能力与商业化适配拆成双轨小队，提升并行开发能力。"}]}};
+    const defaultRiskSummary=[{category:"路线",summary:"路标推进中，供应链平台与 OpenClaw 需重点关注",level:"严重"}];
+    const clone=(v)=>JSON.parse(JSON.stringify(v));
+    const now=()=>{const d=new Date(),p=(n)=>String(n).padStart(2,"0");return `${d.getFullYear()}年${p(d.getMonth()+1)}月${p(d.getDate())}日 ${p(d.getHours())}:${p(d.getMinutes())}`;};
+    const num=(v,f=0)=>{const n=Number(String(v??"").replace(/,/g,"").trim());return Number.isFinite(n)?n:f;};
+    const text=(v,f="")=>{const t=String(v??"").trim();return t||f;};
+    const healthLabelMap={good:"健康",warn:"关注",risk:"风险"};
+    const defaults=()=>({state:clone(defaultState),activeTab:"upstream",importedFileName:"表单编辑保存",riskSummary:clone(defaultRiskSummary),updateTime:now()});
+    const buildProductIndexSource=(pageState)=>({key:"product",updateTime:pageState.updateTime,fileName:pageState.importedFileName,riskSummary:pageState.riskSummary,topMetrics:pageState.state.topMetrics,roadmap:pageState.state.roadmap,business:pageState.state.business,quality:pageState.state.quality,team:pageState.state.team});
+    const app=document.getElementById("app"),statusEl=document.getElementById("status");
+    let currentState=window.DashboardSync?window.DashboardSync.getStoredPageState("product",defaults()):defaults();
+    const initialState=clone(currentState);
+    const panel=(title,sub,body,full=false)=>`<section class="panel${full?" full":""}"><div class="head"><div><div class="panel-title">${title}</div><div class="panel-sub">${sub}</div></div></div><div class="body">${body}</div></section>`;
+    const field=(label,id,value,type="text")=>`<div class="field"><label for="${id}">${label}</label>${type==="textarea"?`<textarea id="${id}">${String(value??"")}</textarea>`:`<input id="${id}" type="${type}" value="${type==="number"?num(value):String(value??"")}">`}</div>`;
+    const selectField=(label,id,value,options)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${options.map((item)=>`<option value="${item.value}"${item.value===value?" selected":""}>${item.label}</option>`).join("")}</select></div>`;
+    const renderTextItems=(listName,titlePrefix,items)=>`<div class="repeat-list" data-list="${listName}">${items.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">${titlePrefix} ${index+1}</div><button class="mini-btn danger" type="button" data-remove="${listName}" data-index="${index}">删除</button></div><div class="grid-2">${field("标题",`${listName}-title-${index}`,item.title)}${field("说明",`${listName}-desc-${index}`,item.desc,"textarea")}</div></div>`).join("")}</div>`;
+    const renderRiskSummary=(items)=>`<div class="repeat-list" data-list="risk-summary">${items.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">首页风险概述 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="risk-summary" data-index="${index}">删除</button></div><div class="grid-3">${field("风险类别",`risk-category-${index}`,item.category)}${field("风险概述",`risk-summary-${index}`,item.summary,"textarea")}${selectField("风险等级",`risk-level-${index}`,item.level,[{value:"严重",label:"严重"},{value:"一般",label:"一般"},{value:"轻度",label:"轻度"}])}</div></div>`).join("")}</div>`;
+    function plainText(value){return String(value??"").replace(/\s+/g," ").trim();}
+    function applyFieldTooltips(){
+      document.querySelectorAll(".field").forEach((fieldEl)=>{
+        const labelEl=fieldEl.querySelector("label");
+        const controlEl=fieldEl.querySelector("input, select, textarea");
+        if(!labelEl||!controlEl)return;
+        const labelText=plainText(labelEl.textContent);
+        const panelTitle=plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent)||"当前编辑区";
+        const rowTitle=plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-title")?.textContent);
+        const blockTitle=plainText(fieldEl.closest(".subblock")?.querySelector(".mini-title")?.textContent);
+        const scopeParts=[panelTitle];
+        if(rowTitle)scopeParts.push(rowTitle);
+        if(blockTitle&&blockTitle!==labelText)scopeParts.push(blockTitle);
+        const tooltip=`字段：${labelText}。位置：${scopeParts.join(" / ")}。用途：用于配置看板中“${panelTitle}”区域的对应显示内容。`;
+        fieldEl.title=tooltip;
+        labelEl.title=tooltip;
+        controlEl.title=tooltip;
+      });
+    }
+    function render(){
+      const s=currentState.state;
+      app.innerHTML=`<div class="layout">
+        ${panel("基本设置","设置保存来源名称与看板默认页签",`<div class="grid-2">${field("来源文件名",`imported-file-name`,currentState.importedFileName||"表单编辑保存")}${selectField("默认页签",`active-tab`,currentState.activeTab,[{value:"upstream",label:"商机经营"},{value:"downstream",label:"项目关联"}])}</div>`,true)}
+        ${panel("顶部指标","对应看板顶部 9 个指标卡片",`<div class="section"><div class="repeat-head"><div class="mini-title">指标卡片</div><button class="mini-btn" type="button" data-add="top-metrics">新增指标</button></div><div class="repeat-list" data-list="top-metrics">${s.topMetrics.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">指标 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="top-metrics" data-index="${index}">删除</button></div><div class="grid-4">${field("名称",`metric-label-${index}`,item.label)}${field("值",`metric-value-${index}`,item.value)}${selectField("颜色",`metric-cls-${index}`,item.cls,[{value:"blue",label:"蓝色"},{value:"amber",label:"橙色"},{value:"purple",label:"深蓝"},{value:"green",label:"浅蓝"}])}${field("描述",`metric-desc-${index}`,item.desc,"textarea")}</div></div>`).join("")}</div></div>`,true)}
+        ${panel("产品路标","对应产品路标卡片中的每条产品线",`<div class="repeat-head"><div class="mini-title">路标条目</div><button class="mini-btn" type="button" data-add="roadmap">新增路标</button></div><div class="repeat-list" data-list="roadmap">${s.roadmap.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">路标 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="roadmap" data-index="${index}">删除</button></div><div class="grid-4">${field("产品名称",`road-product-${index}`,item.product)}${field("负责人",`road-owner-${index}`,item.owner)}${field("当前阶段",`road-phase-${index}`,item.phase)}${field("进度(%)",`road-progress-${index}`,item.progress,"number")}${selectField("健康状态",`road-health-${index}`,item.health,[{value:"good",label:"健康"},{value:"warn",label:"一般"},{value:"risk",label:"风险"}])}${field("下一节点",`road-next-${index}`,item.next,"textarea")}</div><div class="section"><div class="mini-title">季度里程碑</div><div class="subgrid">${[0,1,2,3].map((mileIndex)=>`<div class="subblock"><div class="mini-title">Q${mileIndex+1}</div>${field("版本",`road-version-${index}-${mileIndex}`,item.milestones[mileIndex]?.version||"")}${field("说明",`road-desc-${index}-${mileIndex}`,item.milestones[mileIndex]?.desc||"","textarea")}${selectField("状态",`road-status-${index}-${mileIndex}`,item.milestones[mileIndex]?.status||"",[{value:"done",label:"已完成"},{value:"active",label:"进行中"},{value:"",label:"未开始"}])}</div>`).join("")}</div></div><div class="section"><div class="mini-title">关注点</div><div class="road-focus">${[0,1,2].map((focusIndex)=>field(`关注点 ${focusIndex+1}`,`road-focus-${index}-${focusIndex}`,item.focus[focusIndex]||"","textarea")).join("")}</div></div></div>`).join("")}</div>`,true)}
+        ${panel("商机经营","对应“产品经营-商机经营”表格",`<div class="repeat-head"><div class="mini-title">上游商机</div><button class="mini-btn" type="button" data-add="upstream-rows">新增商机行</button></div><div class="repeat-list" data-list="upstream-rows">${s.business.upstreamRows.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">商机行 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="upstream-rows" data-index="${index}">删除</button></div><div class="grid-4">${field("产品",`upstream-product-${index}`,item.product)}${field("商机引用数",`upstream-count-${index}`,item.opportunityCount,"number")}${field("在途金额(万)",`upstream-amount-${index}`,item.amount,"number")}${field("需求匹配度(%)",`upstream-fit-${index}`,item.fit,"number")}${field("关联项目数",`upstream-related-${index}`,item.relatedProjects,"number")}${field("预计营收(万)",`upstream-revenue-${index}`,item.revenue,"number")}${field("经营关注点",`upstream-note-${index}`,item.note,"textarea")}</div></div>`).join("")}</div>`)}
+        ${panel("项目关联","对应“产品经营-项目关联”表格",`<div class="repeat-head"><div class="mini-title">下游项目</div><button class="mini-btn" type="button" data-add="downstream-rows">新增项目行</button></div><div class="repeat-list" data-list="downstream-rows">${s.business.downstreamRows.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">项目行 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="downstream-rows" data-index="${index}">删除</button></div><div class="grid-4">${field("项目",`downstream-project-${index}`,item.project)}${field("关联产品",`downstream-product-${index}`,item.product)}${field("项目进度(%)",`downstream-progress-${index}`,item.progress,"number")}${field("产品匹配度(%)",`downstream-fit-${index}`,item.fit,"number")}${field("预计营收(万)",`downstream-revenue-${index}`,item.revenue,"number")}${field("关键节点",`downstream-node-${index}`,item.node)}${selectField("状态",`downstream-status-${index}`,item.status,[{value:"good",label:"正常"},{value:"warn",label:"关注"},{value:"risk",label:"风险"}])}</div></div>`).join("")}</div>`)}
+        ${panel("质量总览","对应质量表格与质量焦点",`<div class="section"><div class="repeat-head"><div class="mini-title">质量明细</div><button class="mini-btn" type="button" data-add="quality-rows">新增质量行</button></div><div class="repeat-list" data-list="quality-rows">${s.quality.rows.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">质量行 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="quality-rows" data-index="${index}">删除</button></div><div class="grid-4">${field("产品",`quality-product-${index}`,item.product)}${field("阻塞",`quality-blocker-${index}`,item.blocker,"number")}${field("严重",`quality-major-${index}`,item.major,"number")}${field("一般",`quality-minor-${index}`,item.minor,"number")}${field("关闭率(%)",`quality-close-${index}`,item.closeRate,"number")}${field("质量负责人",`quality-owner-${index}`,item.owner)}</div></div>`).join("")}</div></div><div class="section"><div class="repeat-head"><div class="mini-title">质量焦点</div><button class="mini-btn" type="button" data-add="quality-items">新增焦点</button></div>${renderTextItems("quality-items","质量焦点",s.quality.items)}</div>`,true)}
+        ${panel("研发团队","对应团队统计表格与团队关注点",`<div class="section"><div class="repeat-head"><div class="mini-title">团队明细</div><button class="mini-btn" type="button" data-add="team-rows">新增团队行</button></div><div class="repeat-list" data-list="team-rows">${s.team.rows.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">团队行 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="team-rows" data-index="${index}">删除</button></div><div class="grid-4">${field("产品",`team-product-${index}`,item.product)}${field("产品经理",`team-pm-${index}`,item.pm,"number")}${field("前端",`team-fe-${index}`,item.fe,"number")}${field("后端",`team-be-${index}`,item.be,"number")}${field("QA",`team-qa-${index}`,item.qa,"number")}${field("总人数",`team-total-${index}`,item.total,"number")}${field("平均人效(%)",`team-efficiency-${index}`,item.efficiency,"number")}</div></div>`).join("")}</div></div><div class="section"><div class="repeat-head"><div class="mini-title">团队关注点</div><button class="mini-btn" type="button" data-add="team-items">新增关注项</button></div>${renderTextItems("team-items","团队关注",s.team.items)}</div>`,true)}
+        ${panel("首页风险概述","对应首页产品经营卡片的风险提示统计",`<div class="repeat-head"><div class="mini-title">风险概述</div><button class="mini-btn" type="button" data-add="risk-summary">新增概述</button></div>${renderRiskSummary(currentState.riskSummary)}`,true)}
+      </div>`;
+      applyFieldTooltips();
+    }
+    function collectState(){
+      return {
+        activeTab:text(document.getElementById("active-tab").value,"upstream"),
+        importedFileName:text(document.getElementById("imported-file-name").value,"表单编辑保存"),
+        updateTime:now(),
+        riskSummary:Array.from(document.querySelectorAll('[data-list="risk-summary"] .repeat-row')).map((row,index)=>({category:text(document.getElementById(`risk-category-${index}`).value),summary:text(document.getElementById(`risk-summary-${index}`).value),level:text(document.getElementById(`risk-level-${index}`).value,"一般")})).filter((item)=>item.category||item.summary),
+        state:{
+          topMetrics:Array.from(document.querySelectorAll('[data-list="top-metrics"] .repeat-row')).map((row,index)=>({label:text(document.getElementById(`metric-label-${index}`).value),value:text(document.getElementById(`metric-value-${index}`).value),desc:text(document.getElementById(`metric-desc-${index}`).value),cls:text(document.getElementById(`metric-cls-${index}`).value,"blue")})).filter((item)=>item.label),
+          roadmap:Array.from(document.querySelectorAll('[data-list="roadmap"] .repeat-row')).map((row,index)=>{const health=text(document.getElementById(`road-health-${index}`).value,"good");return{product:text(document.getElementById(`road-product-${index}`).value),owner:text(document.getElementById(`road-owner-${index}`).value),phase:text(document.getElementById(`road-phase-${index}`).value),progress:num(document.getElementById(`road-progress-${index}`).value),health,healthLabel:healthLabelMap[health]||"健康",next:text(document.getElementById(`road-next-${index}`).value),milestones:[0,1,2,3].map((mileIndex)=>({quarter:`Q${mileIndex+1}`,version:text(document.getElementById(`road-version-${index}-${mileIndex}`).value),desc:text(document.getElementById(`road-desc-${index}-${mileIndex}`).value),status:text(document.getElementById(`road-status-${index}-${mileIndex}`).value)})),focus:[0,1,2].map((focusIndex)=>text(document.getElementById(`road-focus-${index}-${focusIndex}`).value)).filter(Boolean)}}).filter((item)=>item.product),
+          business:{
+            upstreamRows:Array.from(document.querySelectorAll('[data-list="upstream-rows"] .repeat-row')).map((row,index)=>({product:text(document.getElementById(`upstream-product-${index}`).value),opportunityCount:num(document.getElementById(`upstream-count-${index}`).value),amount:num(document.getElementById(`upstream-amount-${index}`).value),fit:num(document.getElementById(`upstream-fit-${index}`).value),relatedProjects:num(document.getElementById(`upstream-related-${index}`).value),revenue:num(document.getElementById(`upstream-revenue-${index}`).value),note:text(document.getElementById(`upstream-note-${index}`).value)})).filter((item)=>item.product),
+            downstreamRows:Array.from(document.querySelectorAll('[data-list="downstream-rows"] .repeat-row')).map((row,index)=>({project:text(document.getElementById(`downstream-project-${index}`).value),product:text(document.getElementById(`downstream-product-${index}`).value),progress:num(document.getElementById(`downstream-progress-${index}`).value),fit:num(document.getElementById(`downstream-fit-${index}`).value),revenue:num(document.getElementById(`downstream-revenue-${index}`).value),node:text(document.getElementById(`downstream-node-${index}`).value),status:text(document.getElementById(`downstream-status-${index}`).value,"good")})).filter((item)=>item.project)
+          },
+          quality:{
+            rows:Array.from(document.querySelectorAll('[data-list="quality-rows"] .repeat-row')).map((row,index)=>({product:text(document.getElementById(`quality-product-${index}`).value),blocker:num(document.getElementById(`quality-blocker-${index}`).value),major:num(document.getElementById(`quality-major-${index}`).value),minor:num(document.getElementById(`quality-minor-${index}`).value),closeRate:num(document.getElementById(`quality-close-${index}`).value),owner:text(document.getElementById(`quality-owner-${index}`).value)})).filter((item)=>item.product),
+            items:Array.from(document.querySelectorAll('[data-list="quality-items"] .repeat-row')).map((row,index)=>({title:text(document.getElementById(`quality-items-title-${index}`).value),desc:text(document.getElementById(`quality-items-desc-${index}`).value)})).filter((item)=>item.title||item.desc)
+          },
+          team:{
+            rows:Array.from(document.querySelectorAll('[data-list="team-rows"] .repeat-row')).map((row,index)=>({product:text(document.getElementById(`team-product-${index}`).value),pm:num(document.getElementById(`team-pm-${index}`).value),fe:num(document.getElementById(`team-fe-${index}`).value),be:num(document.getElementById(`team-be-${index}`).value),qa:num(document.getElementById(`team-qa-${index}`).value),total:num(document.getElementById(`team-total-${index}`).value),efficiency:num(document.getElementById(`team-efficiency-${index}`).value)})).filter((item)=>item.product),
+            items:Array.from(document.querySelectorAll('[data-list="team-items"] .repeat-row')).map((row,index)=>({title:text(document.getElementById(`team-items-title-${index}`).value),desc:text(document.getElementById(`team-items-desc-${index}`).value)})).filter((item)=>item.title||item.desc)
+          }
+        }
+      };
+    }
+    function addItem(type){
+      currentState=collectState();
+      if(type==="top-metrics") currentState.state.topMetrics.push({label:"",value:"",desc:"",cls:"blue"});
+      if(type==="roadmap") currentState.state.roadmap.push({product:"",owner:"",phase:"",progress:0,health:"good",healthLabel:"健康",next:"",milestones:[{quarter:"Q1",version:"",desc:"",status:""},{quarter:"Q2",version:"",desc:"",status:""},{quarter:"Q3",version:"",desc:"",status:""},{quarter:"Q4",version:"",desc:"",status:""}],focus:["","",""]});
+      if(type==="upstream-rows") currentState.state.business.upstreamRows.push({product:"",opportunityCount:0,amount:0,fit:0,relatedProjects:0,revenue:0,note:""});
+      if(type==="downstream-rows") currentState.state.business.downstreamRows.push({project:"",product:"",progress:0,fit:0,revenue:0,node:"",status:"good"});
+      if(type==="quality-rows") currentState.state.quality.rows.push({product:"",blocker:0,major:0,minor:0,closeRate:0,owner:""});
+      if(type==="quality-items") currentState.state.quality.items.push({title:"",desc:""});
+      if(type==="team-rows") currentState.state.team.rows.push({product:"",pm:0,fe:0,be:0,qa:0,total:0,efficiency:0});
+      if(type==="team-items") currentState.state.team.items.push({title:"",desc:""});
+      if(type==="risk-summary") currentState.riskSummary.push({category:"",summary:"",level:"一般"});
+      render();
+    }
+    function removeItem(type,index){
+      currentState=collectState();
+      if(type==="top-metrics") currentState.state.topMetrics.splice(index,1);
+      if(type==="roadmap") currentState.state.roadmap.splice(index,1);
+      if(type==="upstream-rows") currentState.state.business.upstreamRows.splice(index,1);
+      if(type==="downstream-rows") currentState.state.business.downstreamRows.splice(index,1);
+      if(type==="quality-rows") currentState.state.quality.rows.splice(index,1);
+      if(type==="quality-items") currentState.state.quality.items.splice(index,1);
+      if(type==="team-rows") currentState.state.team.rows.splice(index,1);
+      if(type==="team-items") currentState.state.team.items.splice(index,1);
+      if(type==="risk-summary") currentState.riskSummary.splice(index,1);
+      render();
+    }
+    function saveData(){
+      currentState=collectState();
+      if(!window.DashboardSync){statusEl.textContent="保存失败：未检测到同步组件。";return;}
+      window.DashboardSync.persistDepartment("product",currentState,buildProductIndexSource(currentState));
+      statusEl.textContent=`已保存并同步产品看板，更新时间：${currentState.updateTime}`;
+    }
+    document.addEventListener("click",(event)=>{const addType=event.target.getAttribute("data-add"),removeType=event.target.getAttribute("data-remove");if(addType){addItem(addType);return;}if(removeType){removeItem(removeType,num(event.target.getAttribute("data-index")));}});
+    document.getElementById("save-top").addEventListener("click",saveData);
+    document.getElementById("save-bottom").addEventListener("click",saveData);
+    document.getElementById("reset-btn").addEventListener("click",()=>{currentState=clone(initialState);render();statusEl.textContent="已恢复为打开编辑页时的数据，请重新保存。";});
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status");
+      ["save-top","save-bottom"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

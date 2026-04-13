@@ -29,14 +29,14 @@
     .top-metric-card .d,.metric .d{margin-top:4px;font-size:10px;color:var(--muted);line-height:1.4}
     .blue .v{color:var(--primary)} .amber .v,.bug.major .v{color:var(--warn)} .purple .v,.box.be .b{color:#7c3aed} .green .v,.bug.resolved .v,.box.qa .b{color:var(--ok)} .bug.blocker .v{color:var(--danger)} .bug.minor .v,.box.fe .b{color:var(--primary)}
     .grid-main,.grid-bottom,.grid-extra{display:grid;gap:10px;align-items:stretch;margin-bottom:10px}.grid-main{grid-template-columns:minmax(0,1.15fr) minmax(0,.95fr)}.grid-bottom,.grid-extra{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-    .card{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}.grid-main .card{height:680px}.grid-bottom .card{height:540px}
-    .ch{padding:10px 12px;border-bottom:1px solid var(--border);background:#fbfdff}.ct{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+    .card{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}.grid-main .card{height:680px}.grid-bottom .card{height:430px}
+    .ch{padding:8px 12px;min-height:56px;border-bottom:1px solid var(--border);background:#fbfdff;display:flex;align-items:center}.ch>div{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:2px;width:100%;min-height:38px}.ct{display:block;font-size:13px;line-height:17px;font-weight:700;margin:0}.cs{display:-webkit-box;min-height:auto;line-height:1.32;margin:0;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
     .pill,.tag,.chip{display:inline-flex;align-items:center;border-radius:999px}
-    .pill{padding:3px 8px;border:1px solid var(--border);background:#fff;font-size:10px;color:var(--sub)}
+    .pill{display:none}
     .cb{padding:10px 12px 12px;display:flex;flex-direction:column;flex:1;min-height:0}
     .scroll-zone,.scroll,.list,.side-scroll{min-height:0;overflow:auto;padding-right:4px}.scroll-zone::-webkit-scrollbar,.scroll::-webkit-scrollbar,.list::-webkit-scrollbar,.side-scroll::-webkit-scrollbar{width:6px;height:6px}.scroll-zone::-webkit-scrollbar-thumb,.scroll::-webkit-scrollbar-thumb,.list::-webkit-scrollbar-thumb,.side-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}
-    .road-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.road{padding:12px;background:#f8fafc}.road-top{display:flex;justify-content:space-between;gap:10px;margin-bottom:10px}.road h3{font-size:14px;margin-bottom:4px}.meta-line{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--sub)}
-    .tag{padding:3px 8px;font-size:10px;font-weight:700;border:1px solid transparent;background:#fff}.tag.good{color:var(--ok);border-color:#a7f3d0}.tag.warn{color:var(--warn);border-color:#fde68a}.tag.risk{color:var(--danger);border-color:#fecaca}
+    .road-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.road{padding:12px;background:#f8fafc}.road-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px}.road-top>div:first-child{flex:1;min-width:0}.road h3{font-size:14px;margin-bottom:4px}.meta-line{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;color:var(--sub)}
+    .tag{padding:3px 10px;font-size:10px;font-weight:700;border:1px solid transparent;background:#fff;flex:0 0 auto;justify-content:center;align-self:flex-start;min-width:52px;white-space:nowrap;writing-mode:horizontal-tb;text-orientation:mixed;line-height:1.2}.tag.good{color:var(--ok);border-color:#a7f3d0}.tag.warn{color:var(--warn);border-color:#fde68a}.tag.risk{color:var(--danger);border-color:#fecaca}
     .ph{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;font-size:10px;color:var(--sub)} .track,.fit .t,.stack{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden}
     .fill,.fit .f{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--primary),var(--accent))}
     .mile{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.m{min-height:72px;padding:8px}.m.done{background:#f0fdf4;border-color:#bbf7d0}.m.active{background:#eff6ff;border-color:#bfdbfe}.m .q{margin-bottom:4px}.m .ver{font-size:12px;font-weight:700;margin-bottom:3px}
@@ -44,6 +44,8 @@
     .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.tab-btn{padding:6px 10px;font-size:11px;font-weight:700;color:var(--sub)} .tab-btn.active{background:#0f172a;color:#fff;border-color:#0f172a}
     .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}.metric,.bug,.team-stat,.item,.panel{background:#f8fafc}.metric,.bug,.team-stat,.item{padding:10px}.team-stat{text-align:center}
     .biz-table-wrap,.quality-main-scroll,.team-main-scroll{flex:1;background:#fff}
+    .quality-main-scroll{overflow-y:auto;overflow-x:hidden;padding-right:0;scrollbar-width:none}
+    .quality-main-scroll::-webkit-scrollbar{width:0;height:0}
     table{width:100%;border-collapse:collapse;font-size:11px} th{padding:7px 8px;text-align:left;white-space:nowrap;color:var(--sub);background:#f8fafc;border-bottom:1px solid var(--border)} td{padding:8px;border-bottom:1px solid #f1f5f9;vertical-align:middle} tr:last-child td{border-bottom:none} tr:hover td{background:#f5f5f5}
     .fit{display:flex;align-items:center;gap:8px;min-width:110px}.fit .n{min-width:36px;text-align:right}
     .bugs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:10px}
@@ -60,26 +62,79 @@
     .top-metric-card.blue .v,.metric.blue .v,.bug.minor .v,.box.fe .b{color:var(--primary)!important}
     .top-metric-card.purple .v,.metric.purple .v,.box.be .b{color:var(--primary-dark)!important}
     .top-metric-card.green .v,.metric.green .v,.bug.resolved .v,.box.qa .b{color:var(--primary-light)!important}
+    .top-metric-card .l,.top-metric-card .v,.top-metric-card .d,
+    .metric .l,.metric .v,.metric .d,
+    .bug .l,.bug .v,
+    .team-stat .l,.team-stat .v{
+      color:var(--text)!important;
+    }
+    .top-metric-card.blue .v,
+    .top-metric-card.purple .v,
+    .top-metric-card.green .v,
+    .top-metric-card.amber .v{
+      color:var(--text)!important;
+    }
+    .bug.blocker .v,
+    .bug.major .v,
+    .bug.minor .v,
+    .bug.resolved .v{
+      color:var(--text)!important;
+    }
+    .box.fe .b,
+    .box.be .b,
+    .box.qa .b{
+      color:var(--text)!important;
+    }
     .tag.good{color:var(--primary)!important;border-color:var(--primary-soft-strong)!important;background:var(--primary-soft)!important}
     .m.done{background:var(--primary-soft)!important;border-color:var(--primary-soft-strong)!important}
     .m.active{background:#f2f7ff!important;border-color:#dbe8ff!important}
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
   </style>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="./dashboard-sync.js"></script>
 </head>
 <body>
   <div id="app" class="page"></div>
   <script>
     const defaultState={topMetrics:[{label:"本月版本窗口",value:"3 个",desc:"PMS、客服平台与 OpenClaw 均有关键版本节点",cls:"blue"},{label:"需重点跟踪产品",value:"2 条",desc:"OpenClaw 性能资源、供应链平台技术路线",cls:"amber"},{label:"经营转化重点",value:"PMS",desc:"商机引用最高，预计转化收入贡献占比 42%",cls:"purple"},{label:"团队负荷状态",value:"可控",desc:"供应链平台资源偏紧，其余产品线节奏稳定",cls:"green"},{label:"关键产品路标达成率",value:"78%",desc:"4 条产品线中 3 条按计划推进",cls:"blue"},{label:"在途商机预计总额",value:"¥4,360万",desc:"23 个商机正在引用产品能力",cls:"purple"},{label:"关联项目预计营收",value:"¥2,180万",desc:"8 个重点项目已绑定产品交付",cls:"green"},{label:"当前高优 Bug",value:"9",desc:"较上周下降 2 个，供应链平台仍承压",cls:"amber"},{label:"研发团队平均人效",value:"91%",desc:"客服平台与 PMS 人效最高",cls:"blue"}],roadmap:[{product:"PMS 产品中台",owner:"刘晨",phase:"Q2 主版本推进",progress:82,health:"good",healthLabel:"健康",next:"4 月底完成 v3.2 发布评审",milestones:[{quarter:"Q1",version:"v3.0",desc:"多组织与流程引擎",status:"done"},{quarter:"Q2",version:"v3.2",desc:"主数据与 ERP 连接器",status:"active"},{quarter:"Q3",version:"v3.5",desc:"制造排产优化",status:""},{quarter:"Q4",version:"v4.0",desc:"行业组件市场",status:""}],focus:["ERP 适配器封板中","主数据建模完成 90%","客户联合验收已排期"]},{product:"OpenClaw 智能助手",owner:"严菲",phase:"Q2 商业化版本",progress:68,health:"warn",healthLabel:"关注",next:"5 月上旬完成 MCP 接入与测试扩容",milestones:[{quarter:"Q1",version:"v2.1",desc:"知识检索与问答发布",status:"done"},{quarter:"Q2",version:"v2.3",desc:"MCP + 多工具编排",status:"active"},{quarter:"Q3",version:"v3.0",desc:"代理工作流开放平台",status:""},{quarter:"Q4",version:"v3.5",desc:"行业模型包集成",status:""}],focus:["性能压测资源偏紧","商业化封装已完成","RAG 响应优化进行中"]},{product:"供应链协同平台",owner:"许知远",phase:"Q2 版本重排",progress:54,health:"risk",healthLabel:"风险",next:"4 月 22 日前完成技术路线决策",milestones:[{quarter:"Q1",version:"v1.0",desc:"业务蓝图与原型确认",status:"done"},{quarter:"Q2",version:"v1.3",desc:"一期上线范围冻结",status:"active"},{quarter:"Q3",version:"v2.0",desc:"采购计划与库存协同",status:""},{quarter:"Q4",version:"v2.5",desc:"供应商生态接入",status:""}],focus:["微服务/单体方案待拍板","需求变更率高于目标线","重点客户交付窗口受影响"]},{product:"客服平台",owner:"陈霄",phase:"Q2 稳定交付",progress:76,health:"good",healthLabel:"健康",next:"4 月中旬交付二期验收包",milestones:[{quarter:"Q1",version:"v1.8",desc:"坐席与工单整合",status:"done"},{quarter:"Q2",version:"v2.0",desc:"智能质检与知识推荐",status:"active"},{quarter:"Q3",version:"v2.3",desc:"全渠道服务分析",status:""},{quarter:"Q4",version:"v3.0",desc:"客服 Copilot",status:""}],focus:["质量指标稳定","联调完成 85%","项目回款预期较好"]}],business:{upstreamRows:[{product:"PMS 产品中台",opportunityCount:9,amount:1680,fit:88,relatedProjects:3,revenue:920,note:"ERP 扩展需求增多"},{product:"OpenClaw 智能助手",opportunityCount:7,amount:1140,fit:81,relatedProjects:2,revenue:460,note:"商业化集成窗口紧"},{product:"供应链协同平台",opportunityCount:4,amount:980,fit:69,relatedProjects:2,revenue:520,note:"定制需求集中"},{product:"客服平台",opportunityCount:3,amount:560,fit:90,relatedProjects:1,revenue:280,note:"风险可控"}],downstreamRows:[{project:"智慧工厂数字化",product:"PMS + OpenClaw",progress:84,fit:87,revenue:680,node:"5 月验收",status:"good"},{project:"新能源 ERP 治理",product:"PMS",progress:76,fit:91,revenue:420,node:"6 月上线",status:"good"},{project:"MES 升级改造",product:"PMS",progress:63,fit:72,revenue:350,node:"7 月交付",status:"warn"},{project:"供应链协同一期",product:"供应链协同平台",progress:58,fit:65,revenue:430,node:"范围待确认",status:"risk"},{project:"客服平台二期",product:"客服平台 + OpenClaw",progress:81,fit:86,revenue:300,node:"4 月验收",status:"good"}]},quality:{rows:[{product:"PMS 产品中台",blocker:0,major:2,minor:8,closeRate:91,owner:"陈涛"},{product:"OpenClaw 智能助手",blocker:1,major:2,minor:7,closeRate:84,owner:"严菲"},{product:"供应链协同平台",blocker:1,major:3,minor:9,closeRate:73,owner:"许知远"},{product:"客服平台",blocker:0,major:0,minor:5,closeRate:94,owner:"陈霄"}],items:[{title:"质量焦点 1",desc:"供应链协同平台当前有 1 个阻塞级与 3 个严重级 Bug，主要集中在采购流程回写与库存同步链路。"},{title:"质量焦点 2",desc:"OpenClaw 在高并发问答场景下仍存在响应峰值抖动，建议将压测资源与回归测试资源拆分保障。"},{title:"质量焦点 3",desc:"PMS 与客服平台保持稳定，版本回归一次通过率均高于 90%，可作为标准化交付样板。"}]},team:{rows:[{product:"PMS 产品中台",pm:3,fe:4,be:2,qa:2,total:9,efficiency:95},{product:"OpenClaw 智能助手",pm:2,fe:4,be:2,qa:2,total:8,efficiency:89},{product:"供应链协同平台",pm:2,fe:3,be:1,qa:1,total:6,efficiency:74},{product:"客服平台",pm:2,fe:2,be:1,qa:1,total:5,efficiency:96}],items:[{title:"人效观察",desc:"客服平台与 PMS 团队节奏最稳，迭代承诺兑现率分别达到 96% 与 95%。"},{title:"资源风险",desc:"供应链平台当前后端与测试共享资源较多，若范围不收敛会继续稀释人效。"},{title:"组织建议",desc:"建议将 OpenClaw 的平台能力与商业化适配拆成双轨小队，提升并行开发能力。"}]}};
-    let state=JSON.parse(JSON.stringify(defaultState)),activeTab="upstream",updateTime="",importedFileName="";
+    const defaultRiskSummary=[{category:"路线",summary:"路标推进中，供应链平台与 OpenClaw 需重点关注",level:"严重"}];
+    let state=JSON.parse(JSON.stringify(defaultState)),activeTab="upstream",updateTime="",importedFileName="",riskSummary=JSON.parse(JSON.stringify(defaultRiskSummary));
     const esc=(v)=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#39;");
     const toText=(v,f="")=>{if(v===null||v===undefined)return f;const t=String(v).trim();return t||f};
     const toNumber=(v,f=0)=>{if(typeof v==="number"&&Number.isFinite(v))return v;const n=Number(String(v??"").replace(/,/g,"").replace(/[^\d.-]/g,""));return Number.isFinite(n)?n:f};
     const getSheetName=(w,names)=>names.find((name)=>w.SheetNames.includes(name));
     const formatTime=()=>{const n=new Date(),p=(x)=>String(x).padStart(2,"0");return `${n.getFullYear()}年${p(n.getMonth()+1)}月${p(n.getDate())}日 ${p(n.getHours())}时${p(n.getMinutes())}分`};
+    const parseRiskSummarySheet=(workbook)=>{const riskSheetName=getSheetName(workbook,["风险概述"]);if(!riskSheetName)return null;const rows=XLSX.utils.sheet_to_json(workbook.Sheets[riskSheetName],{defval:""}).filter((row)=>toText(row["风险类别"])||toText(row["风险概述"]));if(!rows.length)return null;return rows.map((row)=>({category:toText(row["风险类别"]),summary:toText(row["风险概述"]),level:toText(row["风险等级"],"一般")}));};
+    const buildProductIndexSource=()=>({key:"product",updateTime,fileName:importedFileName,riskSummary,topMetrics:state.topMetrics,roadmap:state.roadmap,business:state.business,quality:state.quality,team:state.team});
+    const persistProductState=()=>{if(!window.DashboardSync)return;window.DashboardSync.persistDepartment("product",{state,activeTab,updateTime,importedFileName,riskSummary},buildProductIndexSource());};
+    const openProductEditor=()=>window.open("./产品经营详情-编辑.html","_blank","noopener,noreferrer");
     const statusClass=(v)=>{const t=toText(v,"").toLowerCase();if(["warn","关注","预警"].includes(t))return"warn";if(["risk","风险","异常"].includes(t))return"risk";return"good"};
     const statusLabel=(v)=>v==="warn"?"关注":v==="risk"?"风险":"正常";
     const metricClass=(v)=>{const t=toText(v,"blue").toLowerCase();if(["amber","warn","yellow"].includes(t))return"amber";if(["green","ok","success"].includes(t))return"green";if(["purple","violet"].includes(t))return"purple";return"blue"};
     const formatWan=(v)=>`¥${Math.round(toNumber(v)).toLocaleString("zh-CN")}万`;
+    const persistedProductState=window.DashboardSync?.getStoredPageState("product",null);
+    if(persistedProductState){
+      state=persistedProductState.state||state;
+      activeTab=persistedProductState.activeTab||activeTab;
+      updateTime=persistedProductState.updateTime||formatTime();
+      importedFileName=persistedProductState.importedFileName||"";
+      riskSummary=persistedProductState.riskSummary||riskSummary;
+    }else{
+      updateTime=formatTime();
+    }
+    window.addEventListener("storage",(event)=>{
+      if(!event.key||event.key!=="zuozhanshi_v6_dashboard:page:product"||!window.DashboardSync)return;
+      const latestState=window.DashboardSync.getStoredPageState("product",null);
+      if(!latestState)return;
+      state=latestState.state||state;
+      activeTab=latestState.activeTab||activeTab;
+      updateTime=latestState.updateTime||updateTime;
+      importedFileName=latestState.importedFileName||"";
+      riskSummary=latestState.riskSummary||riskSummary;
+      render();
+    });
     const fitBar=(v)=>{const n=Math.max(0,Math.min(100,Math.round(toNumber(v))));return `<div class="fit"><div class="t"><div class="f" style="width:${n}%"></div></div><span class="n">${n}%</span></div>`};
     const qualityStats=(rows)=>[{label:"阻塞级",value:rows.reduce((s,r)=>s+toNumber(r.blocker),0),cls:"blocker"},{label:"严重级",value:rows.reduce((s,r)=>s+toNumber(r.major),0),cls:"major"},{label:"一般级",value:rows.reduce((s,r)=>s+toNumber(r.minor),0),cls:"minor"},{label:"本月关闭率",value:`${rows.length?Math.round(rows.reduce((s,r)=>s+toNumber(r.closeRate),0)/rows.length):0}%`,cls:"resolved"}];
     const teamStats=(rows)=>[{label:"产品经理",value:rows.reduce((s,r)=>s+toNumber(r.pm),0)},{label:"前端研发",value:rows.reduce((s,r)=>s+toNumber(r.fe),0)},{label:"后端研发",value:rows.reduce((s,r)=>s+toNumber(r.be),0)},{label:"测试 / QA",value:rows.reduce((s,r)=>s+toNumber(r.qa),0)},{label:"平均人效",value:`${rows.length?Math.round(rows.reduce((s,r)=>s+toNumber(r.efficiency),0)/rows.length):0}%`}];
@@ -101,10 +156,12 @@
       const structureHtml=structure.map((i)=>`<div class="box ${esc(i.cls)}"><div class="s">${esc(i.label)}</div><div class="b">${esc(i.value)}</div></div>`).join("");
       const teamFocusHtml=state.team.items.map((i)=>`<div class="item"><div class="t">${esc(i.title)}</div><div class="d">${esc(i.desc)}</div></div>`).join("");
       const app=document.getElementById("app");
-      app.innerHTML=`<div class="topbar"><div class="detail-meta"><span>所属部门：<strong>产品研发部</strong></span><span>更新时间：<strong>${esc(updateTime)}</strong></span></div><div class="actions">${importedFileName?`<span class="file-indicator">${esc(importedFileName)}</span>`:""}<a class="btn btn-outline" href="../作战室数据导入模板/产品研发部-数据导入模板V2.xlsx" download><span>↓</span><span>下载模板</span></a><input id="fileInput" type="file" accept=".xls,.xlsx" style="display:none"><button id="importBtn" class="btn btn-primary" type="button"><span>📤</span><span>导入周报数据</span></button></div></div><section class="top-metrics-row">${topMetricsHtml}</section><section class="grid-main"><div class="card"><div class="ch"><div><div class="ct">产品路标 <span class="pill">关键产品 roadmap 进度</span></div><div class="cs">按季度重组版本节点、健康状态与关键关注项，支持模块内滚动查看。</div></div></div><div class="cb"><div class="scroll-zone"><div class="road-list">${roadmapHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">产品经营 <span class="pill">商机引用与项目关联</span></div><div class="cs">同屏查看上游商机转化和重点项目绑定产品后的营收贡献。</div></div></div><div class="cb"><div class="tabs"><button class="tab-btn ${activeTab==="upstream"?"active":""}" data-tab="upstream" type="button">商机经营</button><button class="tab-btn ${activeTab==="downstream"?"active":""}" data-tab="downstream" type="button">项目关联</button></div><div class="metrics">${businessMetricsHtml}</div><div class="scroll biz-table-wrap">${businessTableHtml}</div></div></div></section><section class="grid-bottom"><div class="card"><div class="ch"><div><div class="ct">产品质量总览 <span class="pill">按产品统计当前 Bug 数</span></div><div class="cs">按阻塞级、严重级、一般级拆分，保留所有质量关注点说明。</div></div></div><div class="cb"><div class="bugs">${qStats.map((i)=>`<div class="bug ${esc(i.cls)}"><div class="l">${esc(i.label)}</div><div class="v">${esc(i.value)}</div></div>`).join("")}</div><div class="qgrid"><div class="scroll quality-main-scroll"><table><thead><tr><th>产品</th><th>严重度分布</th><th>阻塞</th><th>严重</th><th>一般</th><th>关闭率</th><th>质量负责人</th></tr></thead><tbody>${qualityTableHtml}</tbody></table></div><div class="list side-scroll">${qualityFocusHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">产品研发团队概览 <span class="pill">产品、人力与平均人效</span></div><div class="cs">聚焦产品经理、前后端、QA 与平均人效，和一级页面统计口径保持一致。</div></div></div><div class="cb"><div class="team-stats">${teamStatsHtml}</div><div class="scroll team-main-scroll"><table><thead><tr><th>产品</th><th>产品经理</th><th>前端</th><th>后端</th><th>QA</th><th>总人数</th><th>平均人效</th></tr></thead><tbody>${teamTableHtml}</tbody></table></div></div></div></section><section class="grid-extra"><div class="card"><div class="ch"><div><div class="ct">研发结构占比</div><div class="cs">根据团队明细自动汇总前端、后端、QA 占比。</div></div></div><div class="cb"><div class="panel"><div class="mix">${structureHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">团队关注点</div><div class="cs">保留团队观察、资源风险和组织建议，支持继续扩充导入。</div></div></div><div class="cb"><div class="list">${teamFocusHtml}</div></div></div></section>`;
+      app.innerHTML=`<div class="topbar"><div class="detail-meta"><span>所属部门：<strong>产品研发部</strong></span><span>更新时间：<strong>${esc(updateTime)}</strong></span></div><div class="actions"><button id="editBtn" class="btn btn-outline" type="button"><span>✎</span><span>编辑</span></button>${importedFileName?`<span class="file-indicator">${esc(importedFileName)}</span>`:""}<a class="btn btn-outline" href="../作战室数据导入模板/产品研发部-数据导入模板V2.xlsx" download><span>↓</span><span>下载模板</span></a><input id="fileInput" type="file" accept=".xls,.xlsx" style="display:none"><button id="importBtn" class="btn btn-primary" type="button"><span>📤</span><span>导入周报数据</span></button></div></div><section class="top-metrics-row">${topMetricsHtml}</section><section class="grid-main"><div class="card"><div class="ch"><div><div class="ct">产品路标 <span class="pill">关键产品 roadmap 进度</span></div><div class="cs">按季度重组版本节点、健康状态与关键关注项，支持模块内滚动查看。</div></div></div><div class="cb"><div class="scroll-zone"><div class="road-list">${roadmapHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">产品经营 <span class="pill">商机引用与项目关联</span></div><div class="cs">同屏查看上游商机转化和重点项目绑定产品后的营收贡献。</div></div></div><div class="cb"><div class="tabs"><button class="tab-btn ${activeTab==="upstream"?"active":""}" data-tab="upstream" type="button">商机经营</button><button class="tab-btn ${activeTab==="downstream"?"active":""}" data-tab="downstream" type="button">项目关联</button></div><div class="metrics">${businessMetricsHtml}</div><div class="scroll biz-table-wrap">${businessTableHtml}</div></div></div></section><section class="grid-bottom"><div class="card"><div class="ch"><div><div class="ct">产品质量总览 <span class="pill">按产品统计当前 Bug 数</span></div><div class="cs">按阻塞级、严重级、一般级拆分，保留所有质量关注点说明。</div></div></div><div class="cb"><div class="bugs">${qStats.map((i)=>`<div class="bug ${esc(i.cls)}"><div class="l">${esc(i.label)}</div><div class="v">${esc(i.value)}</div></div>`).join("")}</div><div class="qgrid"><div class="scroll quality-main-scroll"><table><thead><tr><th>产品</th><th>严重度分布</th><th>阻塞</th><th>严重</th><th>一般</th><th>关闭率</th><th>质量负责人</th></tr></thead><tbody>${qualityTableHtml}</tbody></table></div><div class="list side-scroll">${qualityFocusHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">产品研发团队概览 <span class="pill">产品、人力与平均人效</span></div><div class="cs">聚焦产品经理、前后端、QA 与平均人效，和一级页面统计口径保持一致。</div></div></div><div class="cb"><div class="team-stats">${teamStatsHtml}</div><div class="scroll team-main-scroll"><table><thead><tr><th>产品</th><th>产品经理</th><th>前端</th><th>后端</th><th>QA</th><th>总人数</th><th>平均人效</th></tr></thead><tbody>${teamTableHtml}</tbody></table></div></div></div></section><section class="grid-extra"><div class="card"><div class="ch"><div><div class="ct">研发结构占比</div><div class="cs">根据团队明细自动汇总前端、后端、QA 占比。</div></div></div><div class="cb"><div class="panel"><div class="mix">${structureHtml}</div></div></div></div><div class="card"><div class="ch"><div><div class="ct">团队关注点</div><div class="cs">保留团队观察、资源风险和组织建议，支持继续扩充导入。</div></div></div><div class="cb"><div class="list">${teamFocusHtml}</div></div></div></section>`;
+      document.getElementById("editBtn").addEventListener("click",openProductEditor);
       document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("fileInput").click());
       document.getElementById("fileInput").addEventListener("change",handleFileUpload);
       document.querySelectorAll(".tab-btn").forEach((btn)=>btn.addEventListener("click",()=>{activeTab=btn.dataset.tab;render();}));
+      persistProductState();
     }
     function handleFileUpload(e){
       const file=e.target.files[0]; if(!file)return; if(typeof XLSX==="undefined"){alert("未检测到 Excel 解析组件，请检查网络后重试。");return;}
@@ -118,11 +175,12 @@
         const qualityFocusSheet=getSheetName(workbook,["质量关注点"]); if(qualityFocusSheet){const rows=XLSX.utils.sheet_to_json(workbook.Sheets[qualityFocusSheet],{defval:""}).filter((r)=>toText(r["标题"])); if(rows.length)nextState.quality.items=rows.map((r)=>({title:toText(r["标题"]),desc:toText(r["说明"])}));}
         const teamSheet=getSheetName(workbook,["团队明细"]); if(teamSheet){const rows=XLSX.utils.sheet_to_json(workbook.Sheets[teamSheet],{defval:""}).filter((r)=>toText(r["产品"])); if(rows.length)nextState.team.rows=rows.map((r)=>{const pm=toNumber(r["产品经理"]),fe=toNumber(r["前端"]),be=toNumber(r["后端"]),qa=toNumber(r["QA"]); return{product:toText(r["产品"]),pm,fe,be,qa,total:toNumber(r["总人数"],pm+fe+be+qa),efficiency:toNumber(r["平均人效"])}});}
         const teamFocusSheet=getSheetName(workbook,["团队关注点"]); if(teamFocusSheet){const rows=XLSX.utils.sheet_to_json(workbook.Sheets[teamFocusSheet],{defval:""}).filter((r)=>toText(r["标题"])); if(rows.length)nextState.team.items=rows.map((r)=>({title:toText(r["标题"]),desc:toText(r["说明"])}));}
+        const parsedRiskSummary=parseRiskSummarySheet(workbook); if(parsedRiskSummary)riskSummary=parsedRiskSummary;
         state=nextState; updateTime=formatTime(); importedFileName=file.name; render();
       }catch(error){console.error(error);alert("导入失败，请检查 Excel 模板字段是否与产品研发部 V2 模板一致。");}};
       reader.readAsBinaryString(file);
     }
-    updateTime=formatTime(); render();
+    render();
   </script>
 </body>
 </html>

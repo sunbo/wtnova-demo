@@ -732,14 +732,31 @@
         }
 
         .card-header {
-            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 56px !important;
+            padding: 8px 12px !important;
             background: #fbfdff !important;
         }
 
+        .card-header>div:first-child {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            min-height: 38px !important;
+            gap: 2px !important;
+        }
+
         .card-title {
+            display: block !important;
             font-size: 13px !important;
+            line-height: 17px !important;
             font-weight: 700 !important;
             gap: 0 !important;
+            margin: 0 !important;
         }
 
         .card-title .icon {
@@ -778,6 +795,20 @@
         th,
         td {
             font-size: 10px !important;
+        }
+
+        .card-subtitle {
+            display: block !important;
+            width: 100% !important;
+            min-height: auto !important;
+            color: var(--text-muted) !important;
+            line-height: 1.32 !important;
+            margin: 0 !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
         }
 
         .project-card .card-value.risk {
@@ -939,7 +970,26 @@
             color:var(--primary-color) !important;
             opacity:1 !important;
         }
+        .payment-stat-item .stat-label,
+        .payment-stat-item .stat-value,
+        .payment-stat-item .stat-unit{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
+        .resource-item .percentage,
+        .resource-item .item-info .percentage,
+        .payment-stat-item:nth-child(1) .stat-value,
+        .payment-stat-item.cyan .stat-value,
+        .payment-stat-item.emerald .stat-value,
+        .payment-stat-item.amber .stat-value,
+        .payment-stat-item .stat-unit{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
         .data-table .progress-fill{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+        :is([class*="card"], [class*="panel"], [class*="item"], [class*="box"], [class*="road"], [class*="scroll"], .field, .repeat-row, .subblock, .sticky, .modal) {
+            border-radius: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -952,9 +1002,10 @@
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <!-- SheetJS -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./dashboard-sync.js"></script>
 
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useRef, useEffect } = React;
 
         // 默认甘特图数据
         const defaultGanttData = [
@@ -1032,6 +1083,10 @@
             ]
         };
 
+        const defaultRiskSummary = [
+            { category: '交付', summary: '项目整体推进良好，资源与回款需双线盯住', level: '严重' }
+        ];
+
         const getSheetNameV2 = (workbook, candidates) => candidates.find((name) => workbook.SheetNames.includes(name));
         const toNumberV2 = (value, fallback = 0) => {
             const num = Number(value);
@@ -1042,6 +1097,38 @@
             const text = String(value).trim();
             return text || fallback;
         };
+
+        const formatNowV2 = () => {
+            const now = new Date();
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}时${pad(now.getMinutes())}分`;
+        };
+
+        const parseRiskSummarySheetV2 = (workbook) => {
+            const riskSheetName = getSheetNameV2(workbook, ['风险概述']);
+            if (!riskSheetName) return null;
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[riskSheetName], { defval: '' });
+            const items = rows
+                .filter((row) => toTextV2(row['风险类别']) || toTextV2(row['风险概述']))
+                .map((row) => ({
+                    category: toTextV2(row['风险类别']),
+                    summary: toTextV2(row['风险概述']),
+                    level: toTextV2(row['风险等级'], '一般')
+                }))
+                .filter((item) => item.category || item.summary);
+            return items.length > 0 ? items : null;
+        };
+
+        const buildDeliveryIndexSource = ({ ganttData, projectProgress, resourceData, paymentData, riskSummary, updateTime, fileName }) => ({
+            key: 'delivery',
+            updateTime,
+            fileName,
+            ganttData,
+            projectProgress,
+            resourceData,
+            paymentData,
+            riskSummary
+        });
 
         // 饼图组件
         const MiniPieChart = ({ data, colors, size = 80 }) => {
@@ -1130,9 +1217,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📅</span>
-                            项目整体进度
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📅</span>
+                                项目整体进度
+                            </div>
+                            <div className="card-subtitle">展示重点项目年度阶段排期与推进状态</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1147,9 +1237,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📋</span>
-                            项目当前进展&风险问题
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📋</span>
+                                项目当前进展&风险问题
+                            </div>
+                            <div className="card-subtitle">展示项目最新进展与交付风险</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1186,11 +1279,13 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📊</span>
-                            交付资源分布
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📊</span>
+                                交付资源分布
+                            </div>
+                            <div className="card-subtitle">展示资源利用、外采和项目投入分布，截止 {data.date}</div>
                         </div>
-                        <span className="card-subtitle">截止 {data.date}</span>
                     </div>
                     <div className="card-body">
                         <div className="resource-grid">
@@ -1270,11 +1365,13 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">💰</span>
-                            交付回款情况总览
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">💰</span>
+                                交付回款情况总览
+                            </div>
+                            <div className="card-subtitle">展示合同、回款率与各项目回款节点，截止 2024年4月7日</div>
                         </div>
-                        <span className="card-subtitle">截止 2024年4月7日</span>
                     </div>
                     <div className="card-body">
                         <div className="payment-stats">
@@ -1333,17 +1430,54 @@
 
         // 主应用组件
         const App = () => {
-            const [ganttData, setGanttData] = useState(defaultGanttData);
-            const [projectProgress, setProjectProgress] = useState(defaultProjectProgress);
-            const [resourceData, setResourceData] = useState(defaultResourceData);
-            const [paymentData, setPaymentData] = useState(defaultPaymentData);
-            const [fileName, setFileName] = useState('');
+            const persistedState = window.DashboardSync?.getStoredPageState('delivery', {
+                ganttData: defaultGanttData,
+                projectProgress: defaultProjectProgress,
+                resourceData: defaultResourceData,
+                paymentData: defaultPaymentData,
+                riskSummary: defaultRiskSummary,
+                updateTime: formatNowV2(),
+                fileName: ''
+            }) || {};
+
+            const [ganttData, setGanttData] = useState(persistedState.ganttData || defaultGanttData);
+            const [projectProgress, setProjectProgress] = useState(persistedState.projectProgress || defaultProjectProgress);
+            const [resourceData, setResourceData] = useState(persistedState.resourceData || defaultResourceData);
+            const [paymentData, setPaymentData] = useState(persistedState.paymentData || defaultPaymentData);
+            const [riskSummary, setRiskSummary] = useState(persistedState.riskSummary || defaultRiskSummary);
+            const [fileName, setFileName] = useState(persistedState.fileName || '');
+            const [updateTime, setUpdateTime] = useState(persistedState.updateTime || formatNowV2());
             const fileInputRef = useRef(null);
-            const updateTime = (() => {
-                const now = new Date();
-                const pad = (num) => String(num).padStart(2, '0');
-                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
-            })();
+
+            useEffect(() => {
+                if (!window.DashboardSync) return;
+                const pageState = { ganttData, projectProgress, resourceData, paymentData, riskSummary, updateTime, fileName };
+                window.DashboardSync.persistDepartment('delivery', pageState, buildDeliveryIndexSource(pageState));
+            }, [ganttData, projectProgress, resourceData, paymentData, riskSummary, updateTime, fileName]);
+
+            useEffect(() => {
+                const handleStorageSync = (event) => {
+                    if (!event.key || event.key !== 'zuozhanshi_v6_dashboard:page:delivery' || !window.DashboardSync) return;
+                    const latestState = window.DashboardSync.getStoredPageState('delivery', null);
+                    if (!latestState) return;
+                    setGanttData(latestState.ganttData || defaultGanttData);
+                    setProjectProgress(latestState.projectProgress || defaultProjectProgress);
+                    setResourceData(latestState.resourceData || defaultResourceData);
+                    setPaymentData(latestState.paymentData || defaultPaymentData);
+                    setRiskSummary(latestState.riskSummary || defaultRiskSummary);
+                    setFileName(latestState.fileName || '');
+                    setUpdateTime(latestState.updateTime || formatNowV2());
+                };
+
+                window.addEventListener('storage', handleStorageSync);
+                return () => {
+                    window.removeEventListener('storage', handleStorageSync);
+                };
+            }, []);
+
+            const openDeliveryEditor = () => {
+                window.open('./项目交付详情-编辑.html', '_blank', 'noopener,noreferrer');
+            };
 
             const handleFileUploadV2 = (e) => {
                 const file = e.target.files[0];
@@ -1463,6 +1597,13 @@
                             }
                         }
 
+                        const parsedRiskSummary = parseRiskSummarySheetV2(workbook);
+                        if (parsedRiskSummary) {
+                            setRiskSummary(parsedRiskSummary);
+                        }
+
+                        setUpdateTime(formatNowV2());
+
                     } catch (error) {
                         console.error('解析Excel失败:', error);
                         alert('解析Excel文件失败，请检查文件格式');
@@ -1480,6 +1621,14 @@
                             <span>更新时间：<strong>{updateTime}</strong></span>
                         </div>
                         <div className="actions">
+                            <button
+                                className="btn btn-outline"
+                                type="button"
+                                onClick={openDeliveryEditor}
+                            >
+                                <span>✎</span>
+                                编辑
+                            </button>
                             <a
                                 className="btn btn-outline"
                                 href="../作战室数据导入模板/交付部-数据导入模板V2.xlsx"
@@ -1497,6 +1646,7 @@
                             />
                             <button
                                 className="btn btn-primary"
+                                type="button"
                                 onClick={() => fileInputRef.current.click()}
                             >
                                 <span>📤</span>

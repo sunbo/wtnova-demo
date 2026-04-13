@@ -19,6 +19,8 @@
       --green:#79a8ff;
       --amber:#d97706;
       --red:#dc2626;
+      --danger-soft:#fff1f0;
+      --danger-line:#ffccc7;
       --purple:#003a99;
       --shadow:0 16px 40px -28px rgba(15,23,42,.28);
       --radius:16px;
@@ -50,6 +52,7 @@
     .top-metric .label,.metric-box .label,.viz-title,.subline,.list-meta,.modal-sub{font-size:10px;color:var(--sub)}
     .top-metric .value{margin-top:3px;font-size:18px;font-weight:800;line-height:1.05}
     .top-metric .desc{margin-top:4px;font-size:10px;color:var(--muted);line-height:1.4}
+    .top-metric .desc{min-height:42px;max-height:42px}
     .blue{color:var(--blue)} .green{color:var(--green)} .amber{color:var(--amber)} .red{color:var(--red)} .purple{color:var(--purple)}
 
     .dept-grid{
@@ -60,14 +63,15 @@
       box-shadow:0 1px 2px rgba(15,23,42,.05);display:flex;flex-direction:column;gap:8px;min-height:0;transition:background-color .18s ease,border-color .18s ease
     }
 
-    .dept-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-    .dept-title{display:flex;flex-direction:column;gap:0}
-    .dept-title h3{font-size:13px;font-weight:800}
-    .dept-actions{display:flex;align-items:center;gap:6px}
+    .dept-head{display:flex;justify-content:space-between;align-items:center;gap:10px;min-height:30px}
+    .dept-title{display:flex;flex-direction:column;justify-content:center;gap:0;min-width:0;min-height:30px}
+    .dept-title h3{font-size:13px;font-weight:800;line-height:18px;min-height:18px;display:flex;align-items:center}
+    .dept-actions{display:flex;align-items:center;gap:6px;min-width:0;flex:1;justify-content:flex-end;min-height:30px}
     .status{
       display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;
-      font-size:10px;font-weight:700;white-space:nowrap;background:#f3f6fa
+      font-size:10px;font-weight:700;white-space:nowrap;background:#f3f6fa;min-width:0;max-width:320px
     }
+    .status-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .status.good{color:var(--green)}
     .status.warn{color:var(--amber)}
     .status.risk{color:var(--red)}
@@ -78,6 +82,12 @@
     }
     .more-btn:hover{border-color:var(--line-strong);color:var(--blue);background:#f5f5f5}
     .more-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .card-edit-btn{
+      display:inline-flex;align-items:center;justify-content:center;min-width:52px;height:26px;padding:0 10px;
+      border:1px solid var(--line);background:#fff;color:var(--text);font-size:10px;font-weight:700;cursor:pointer;
+      transition:background-color .18s ease,border-color .18s ease
+    }
+    .card-edit-btn:hover{background:#f5f7fb;border-color:var(--line-strong)}
 
     .metric-grid-4,.metric-grid-3,.metric-grid-2{
       display:grid;gap:6px
@@ -90,6 +100,7 @@
     }
     .metric-box .value{font-size:15px;font-weight:800;line-height:1.05;margin-top:3px}
     .metric-box .desc{margin-top:3px;font-size:10px;color:var(--muted);line-height:1.35}
+    .metric-box .desc{min-height:28px;max-height:28px}
 
     .dept-card.overview .metric-grid-4{
       flex:1;align-content:stretch;grid-auto-rows:minmax(86px,1fr)
@@ -98,11 +109,125 @@
       min-height:0;height:100%;display:flex;flex-direction:column;justify-content:center
     }
 
+    .dept-card.overview,
+    .dept-card.finance{
+      align-self:start;
+      height:396px;
+      max-height:396px;
+    }
+    .dept-card.overview{
+      overflow:hidden;
+      --ops-ring:#dcecff;
+      --ops-danger:#1677ff;
+      --ops-soft:#f8fbff;
+      --ops-table-head:#e8f3ff;
+      --ops-table-head-text:#1677ff;
+      --ops-table-body:#f3f8ff;
+      --ops-table-line:#dbeafe;
+      --ops-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+    .dept-card.overview .overview-layout{
+      display:flex;flex-direction:column;gap:6px;min-height:0;overflow:hidden;padding-right:0;flex:1 1 auto
+    }
+    .ops-donut-grid{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;flex:1 1 0;min-height:0;align-items:stretch
+    }
+    .ops-donut-card{
+      background:#fff;border:1px solid #d9e7f7;border-radius:0;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:0;height:100%;box-shadow:var(--ops-shadow)
+    }
+    .ops-donut-title{
+      min-height:18px;display:flex;align-items:center;font-size:12px;font-weight:800;line-height:18px;color:#1f1f1f
+    }
+    .ops-donut-body{
+      display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:6px;align-items:center;flex:1 1 auto;min-height:0
+    }
+    .ops-donut-metrics{
+      display:grid;gap:6px
+    }
+    .ops-metric-block{
+      background:#f5faff;border:1px solid #dbeafe;border-radius:0;padding:6px 8px;box-shadow:none
+    }
+    .ops-metric-label{
+      font-size:10px;line-height:1.35;color:#8c8c8c
+    }
+    .ops-metric-value{
+      margin-top:3px;font-size:15px;font-weight:800;line-height:1.05;color:#1f1f1f
+    }
+    .ops-donut-ring{
+      width:84px;height:84px;border-radius:50%;position:relative;display:grid;place-items:center;justify-self:end;flex-shrink:0
+    }
+    .ops-donut-ring::after{
+      content:"";position:absolute;inset:13px;border-radius:50%;background:#fff
+    }
+    .ops-donut-core{
+      position:relative;z-index:1;font-size:14px;font-weight:800;line-height:1;color:#1f1f1f;text-align:center
+    }
+    .ops-summary{
+      display:none
+    }
+    .ops-kpi-panel{
+      background:#fff;border:1px solid #d9e7f7;border-radius:0;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:0;flex:1 1 0;align-self:stretch;box-shadow:var(--ops-shadow)
+    }
+    .ops-kpi-head{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:18px
+    }
+    .ops-kpi-title{
+      display:flex;align-items:center;min-height:18px;font-size:12px;font-weight:800;line-height:18px;color:#1f1f1f
+    }
+    .ops-kpi-unit{
+      font-size:10px;color:#8c8c8c;white-space:nowrap
+    }
+    .ops-kpi-table-wrap{
+      overflow:visible;border-radius:8px;border:none;background:transparent;flex:1;display:flex;min-height:0
+    }
+    .ops-kpi-table{
+      width:100%;height:100%;table-layout:fixed;border-collapse:separate;border-spacing:3px 5px;min-width:0;font-size:10px;line-height:1.2;background:transparent
+    }
+    .ops-kpi-table th{
+      padding:1px 2px 3px;background:transparent;color:var(--sub);font-size:8px;font-weight:700;text-align:center;white-space:normal;word-break:break-word;border:none;border-radius:0;vertical-align:bottom;box-shadow:none
+    }
+    .ops-kpi-table td{
+      padding:9px 5px;background:var(--ops-table-body);color:#1f1f1f;font-weight:700;text-align:center;white-space:normal;word-break:break-word;border:1px solid var(--ops-table-line);border-radius:0;box-shadow:none;vertical-align:middle
+    }
+    .ops-kpi-table tbody{
+      height:100%
+    }
+    .ops-kpi-table tbody tr{
+      height:33.333%
+    }
+    .ops-kpi-table td:first-child{
+      font-weight:800;color:#1677ff
+    }
+    .ops-kpi-table td.is-negative{
+      background:#fff1f0;
+      border-color:#ffc9c2;
+      color:#cf1322
+    }
+    .ops-kpi-table td.is-label{
+      font-weight:800;color:#1677ff
+    }
+
     .viz-grid-2,.viz-grid-mix{display:grid;gap:6px;min-height:0}
     .viz-grid-2{grid-template-columns:1fr 1fr}
     .viz-grid-mix{grid-template-columns:1.15fr .85fr}
     .viz-panel{
       background:var(--panel-soft);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:0;transition:background-color .18s ease,border-color .18s ease
+    }
+    .dept-card.finance .viz-grid-2.finance-grid{
+      flex:1;align-items:stretch
+    }
+    .dept-card.finance .finance-chart-panel,
+    .dept-card.finance .finance-risk-panel{
+      display:flex;flex-direction:column;min-height:0
+    }
+    .dept-card.finance .finance-chart-panel .bars.tall{
+      flex:1;height:100%;min-height:170px
+    }
+    .dept-card.finance .finance-risk-panel .risk-list{
+      flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:6px
+    }
+    .dept-card.finance .finance-risk-panel .risk-item{
+      flex:1;align-items:flex-start
     }
     .viz-title{margin-bottom:6px}
 
@@ -136,6 +261,7 @@
       display:flex;justify-content:space-between;gap:10px;padding:8px 9px;border-radius:11px;
       background:#fff;border:1px solid var(--line);transition:background-color .18s ease,border-color .18s ease
     }
+    .item-copy{flex:1;min-width:0}
     .list-item strong,.risk-item strong,.opportunity-item strong,.vacancy-item strong,.project-row strong{font-size:11px;color:var(--text)}
     .list-item span,.risk-item span,.opportunity-item span,.vacancy-item span,.project-row span{font-size:10px;color:var(--sub);line-height:1.45}
     .risk-tag,.project-tag,.vacancy-tag{
@@ -144,6 +270,24 @@
     .risk-tag.high,.project-tag.risk,.vacancy-tag.high{color:var(--red)}
     .risk-tag.mid,.project-tag.warn,.vacancy-tag.mid{color:var(--amber)}
     .risk-tag.low,.project-tag.good,.vacancy-tag.low{color:var(--blue)}
+    .risk-item.is-alert,
+    .project-row.is-alert,
+    .vacancy-item.is-alert{
+      background:var(--danger-soft);
+      border-color:var(--danger-line);
+    }
+    .risk-item.is-alert strong,
+    .risk-item.is-alert span,
+    .project-row.is-alert strong,
+    .project-row.is-alert span,
+    .project-row.is-alert .inline-meta span,
+    .vacancy-item.is-alert strong,
+    .vacancy-item.is-alert span,
+    .risk-item.is-alert .risk-tag.high,
+    .project-row.is-alert .project-tag.risk,
+    .vacancy-item.is-alert .vacancy-tag.high{
+      color:var(--text) !important;
+    }
 
     .donut-wrap{display:flex;gap:10px;align-items:center}
     .donut{
@@ -159,13 +303,57 @@
 
     .project-board{gap:6px}
     .project-row{padding:8px 8px}
-    .project-row .main{display:flex;flex-direction:column;gap:3px;flex:1}
-    .inline-meta{display:flex;flex-wrap:wrap;gap:8px}
-    .inline-meta span{font-size:10px;color:var(--muted)}
+    .project-row .main{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+    .inline-meta{display:flex;flex-wrap:nowrap;gap:8px;min-width:0}
+    .inline-meta span{font-size:10px;color:var(--muted);min-width:0;flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+    .text-ellipsis-1,.text-ellipsis-2,.text-ellipsis-3{
+      overflow:hidden;word-break:break-all
+    }
+    .text-ellipsis-1{
+      display:block;white-space:nowrap;text-overflow:ellipsis
+    }
+    .text-ellipsis-2,.text-ellipsis-3{
+      display:-webkit-box;-webkit-box-orient:vertical;white-space:normal
+    }
+    .text-ellipsis-2{-webkit-line-clamp:2;line-clamp:2}
+    .text-ellipsis-3{-webkit-line-clamp:3;line-clamp:3}
 
     .delivery-grid{align-items:stretch}
     .delivery-chart{display:flex;flex-direction:column}
-    .delivery-chart .bars.tall{flex:1;height:100%;min-height:176px}
+    .delivery-chart .bars.tall{flex:1;height:100%;min-height:146px}
+    .delivery-grid .viz-panel{padding:7px}
+    .delivery-grid .project-board{gap:5px}
+    .delivery-grid .project-row{padding:7px 8px}
+
+    .hr-lower{align-items:start}
+    .hr-lower .viz-panel{padding:7px}
+    .hr-funnel-panel{display:flex;flex-direction:column;gap:6px}
+    .hr-funnel-panel .viz-title{margin-bottom:4px}
+    .hr-funnel-panel .funnel-list{gap:5px}
+    .hr-funnel-panel .funnel-row{grid-template-columns:66px 1fr 34px;gap:6px}
+    .hr-funnel-panel .track{height:7px}
+    .hr-focus-grid{
+      display:grid;
+      grid-template-rows:repeat(2,minmax(0,1fr));
+      grid-auto-flow:column;
+      grid-auto-columns:minmax(0,1fr);
+      gap:6px;
+      margin-top:2px
+    }
+    .hr-focus-grid .list-item{
+      min-height:56px;
+      padding:7px 9px;
+      align-items:flex-start
+    }
+    .hr-focus-grid .list-item strong{margin-bottom:2px}
+    .hr-focus-grid .list-item span{
+      display:-webkit-box;
+      -webkit-box-orient:vertical;
+      -webkit-line-clamp:2;
+      line-clamp:2;
+      overflow:hidden
+    }
 
     .solution-layout{display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
     .solution-top{flex:1;align-items:stretch}
@@ -173,6 +361,26 @@
     .solution-top .opportunity-list{flex:1}
     .solution-top .donut-wrap{flex:1;min-height:176px;justify-content:center}
     .solution-top .donut{width:120px;height:120px}
+    .dept-card.product,
+    .dept-card.solution{gap:6px;padding:9px}
+    .dept-card.product .viz-grid-mix,
+    .dept-card.product .metric-grid-4,
+    .dept-card.product .metric-grid-3,
+    .dept-card.solution .viz-grid-mix,
+    .dept-card.solution .metric-grid-3{gap:5px}
+    .dept-card.product .viz-panel,
+    .dept-card.solution .viz-panel{padding:7px}
+    .dept-card.product .metric-box,
+    .dept-card.solution .metric-box{padding:6px}
+    .dept-card.product .metric-box .desc,
+    .dept-card.solution .metric-box .desc{min-height:22px;max-height:22px}
+    .dept-card.product .progress-list,
+    .dept-card.solution .opportunity-list{gap:5px}
+    .dept-card.product .progress-row{grid-template-columns:66px 1fr 34px;gap:6px}
+    .dept-card.product .viz-title,
+    .dept-card.solution .viz-title{margin-bottom:5px}
+    .dept-card.solution .solution-layout{gap:5px}
+    .dept-card.solution .solution-top .donut-wrap{min-height:154px}
 
     .modal-overlay{
       position:fixed;inset:0;background:rgba(15,23,42,.34);backdrop-filter:blur(4px);
@@ -204,6 +412,7 @@
       .metric-grid-4{grid-template-columns:repeat(2,minmax(0,1fr))}
       .viz-grid-2,.viz-grid-mix{grid-template-columns:1fr}
       .solution-top .donut{width:104px;height:104px}
+      .ops-donut-grid{grid-template-columns:1fr}
     }
     @media (max-width:760px){
       .metric-grid-3,.metric-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -213,6 +422,8 @@
     }
     @media (max-width:560px){
       .metric-grid-4,.metric-grid-3,.metric-grid-2{grid-template-columns:1fr}
+      .ops-donut-body{grid-template-columns:1fr}
+      .ops-donut-ring{justify-self:center}
     }
 
     .top-metric,
@@ -241,11 +452,20 @@
     .modal-close:hover {
       background:#f5f5f5 !important;
     }
+    .risk-item.is-alert:hover,
+    .project-row.is-alert:hover,
+    .vacancy-item.is-alert:hover{
+      background:var(--danger-soft) !important;
+      border-color:var(--danger-line) !important;
+    }
+    :is(.top-metric,.dept-card,.metric-box,.viz-panel,.project-row,.opportunity-item,.risk-item,.vacancy-item,.modal,.donut-wrap,[class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky){
+      border-radius:0 !important;
+    }
   </style>
 </head>
 <body>
   <div id="app" class="page"></div>
-  <script>
+  <script type="text/plain" id="legacy-index-script">
     const departments = {
       finance: {
         key: "finance",
@@ -757,5 +977,7 @@
 
     renderPage();
   </script>
+  <script src="./dashboard-sync.js"></script>
+  <script src="./index-dashboard.js"></script>
 </body>
 </html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目交付详情-编辑</title>
+  <style>
+    :root{--bg:#f5f8fe;--panel:#fff;--soft:#f8fafc;--line:#dbe5f1;--text:#0f172a;--sub:#526077;--blue:#0052d9;--blue-dark:#003a99;--red:#dc2626;--shadow:0 12px 30px -24px rgba(15,23,42,.28);--radius:14px}
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+    .page{max-width:1540px;margin:0 auto;padding:18px}.topbar,.head,.repeat-head,.sticky{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.topbar{flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}.title h1{font-size:22px;line-height:1.2}.title p,.status{font-size:12px;color:var(--sub)}.actions{display:flex;gap:10px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.panel.full{grid-column:1/-1}.head{padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)}.panel-title{font-size:16px;font-weight:800}.panel-sub{font-size:12px;color:var(--sub)}.body{padding:14px}
+    .grid-2,.grid-3,.grid-4,.grid-6{display:grid;gap:12px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}.grid-6{grid-template-columns:repeat(6,minmax(0,1fr))}
+    .field,.repeat-row,.subblock{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}.field label,.mini-title{display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)} .field label{cursor:help} input,select,textarea{width:100%;padding:8px 10px;border:1px solid #cfd9e5;border-radius:10px;background:#fff;font-size:13px;color:var(--text);outline:none} textarea{min-height:80px;resize:vertical}.repeat-list{display:flex;flex-direction:column;gap:10px}.repeat-head{margin-bottom:8px}.repeat-title{font-size:12px;font-weight:800;color:var(--sub)} .section{margin-top:14px}.phase-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+    .btn,.mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;text-decoration:none;font-weight:700}.btn{height:36px;padding:0 14px;font-size:13px}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}.mini-btn{height:30px;padding:0 12px;font-size:12px;color:var(--blue)}.mini-btn.danger{color:var(--red)}.sticky{position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+    @media (max-width:1080px){.layout,.grid-4,.grid-6,.grid-3,.phase-grid{grid-template-columns:1fr 1fr}} @media (max-width:720px){.layout,.grid-6,.grid-4,.grid-3,.grid-2,.phase-grid{grid-template-columns:1fr}.sticky,.topbar{flex-direction:column;align-items:stretch}}
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>项目交付详情编辑</h1>
+        <p>保存后同步更新“交付部数据看板”，覆盖甘特、项目进展、资源投入、回款明细与首页风险概述。</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="./交付部数据看板.html" target="_blank" rel="noopener noreferrer">查看看板</a>
+        <button class="btn btn-primary" type="button" id="save-top">保存</button>
+      </div>
+    </div>
+    <form><div id="app"></div></form>
+    <div class="sticky">
+      <div id="status" class="status">未保存修改。</div>
+      <div class="actions">
+        <button class="btn" type="button" id="reset-btn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="save-bottom">保存并更新看板</button>
+      </div>
+    </div>
+  </div>
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const clone=(v)=>JSON.parse(JSON.stringify(v));
+    const now=()=>{const d=new Date(),p=(n)=>String(n).padStart(2,"0");return `${d.getFullYear()}年${p(d.getMonth()+1)}月${p(d.getDate())}日 ${p(d.getHours())}:${p(d.getMinutes())}`;};
+    const num=(v,f=0)=>{const n=Number(String(v??"").replace(/,/g,"").trim());return Number.isFinite(n)?n:f;};
+    const text=(v,f="")=>{const t=String(v??"").trim();return t||f;};
+    const blankState=()=>({ganttData:[],projectProgress:{overview:"",projects:[]},resourceData:{utilization:{delivery:0,other:0,percentage:0,desc:""},distribution:[],outsourcing:{outsource:0,internal:0,percentage:0,desc:""},overrun:{planned:0,actual:0,percentage:0,desc:""},date:""},paymentData:{total:0,received:0,rate:0,forecast:0,details:[]},riskSummary:[{category:"",summary:"",level:"一般"}],fileName:"表单编辑保存",updateTime:now()});
+    const buildDeliveryIndexSource=(pageState)=>({key:"delivery",updateTime:pageState.updateTime,fileName:pageState.fileName,ganttData:pageState.ganttData,projectProgress:pageState.projectProgress,resourceData:pageState.resourceData,paymentData:pageState.paymentData,riskSummary:pageState.riskSummary});
+    const app=document.getElementById("app"),statusEl=document.getElementById("status");
+    let currentState=window.DashboardSync?window.DashboardSync.getStoredPageState("delivery",blankState()):blankState();
+    const initialState=clone(currentState);
+    const panel=(title,sub,body,full=false)=>`<section class="panel${full?" full":""}"><div class="head"><div><div class="panel-title">${title}</div><div class="panel-sub">${sub}</div></div></div><div class="body">${body}</div></section>`;
+    const field=(label,id,value,type="text")=>`<div class="field"><label for="${id}">${label}</label>${type==="textarea"?`<textarea id="${id}">${String(value??"")}</textarea>`:`<input id="${id}" type="${type}" value="${type==="number"?num(value):String(value??"")}">`}</div>`;
+    const selectField=(label,id,value,options)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${options.map((item)=>`<option value="${item.value}"${item.value===value?" selected":""}>${item.label}</option>`).join("")}</select></div>`;
+    function plainText(value){return String(value??"").replace(/\s+/g," ").trim();}
+    function applyFieldTooltips(){
+      document.querySelectorAll(".field").forEach((fieldEl)=>{
+        const labelEl=fieldEl.querySelector("label");
+        const controlEl=fieldEl.querySelector("input, select, textarea");
+        if(!labelEl||!controlEl)return;
+        const labelText=plainText(labelEl.textContent);
+        const panelTitle=plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent)||"当前编辑区";
+        const rowTitle=plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-title")?.textContent);
+        const blockTitle=plainText(fieldEl.closest(".subblock")?.querySelector(".mini-title")?.textContent);
+        const scopeParts=[panelTitle];
+        if(rowTitle)scopeParts.push(rowTitle);
+        if(blockTitle&&blockTitle!==labelText)scopeParts.push(blockTitle);
+        const tooltip=`字段：${labelText}。位置：${scopeParts.join(" / ")}。用途：用于配置看板中“${panelTitle}”区域的对应显示内容。`;
+        fieldEl.title=tooltip;
+        labelEl.title=tooltip;
+        controlEl.title=tooltip;
+      });
+    }
+    function render(){
+      const s=currentState;
+      app.innerHTML=`<div class="layout">
+        ${panel("基本设置","配置保存来源名",`<div class="grid-2">${field("来源文件名","file-name",s.fileName||"表单编辑保存")}</div>`)}
+        ${panel("项目进展概述","对应项目交付概述卡片",`<div class="grid-2">${field("整体概述","progress-overview",s.projectProgress.overview,"textarea")}</div><div class="section"><div class="repeat-head"><div class="mini-title">项目进展条目</div><button class="mini-btn" type="button" data-add="progress-projects">新增项目</button></div><div class="repeat-list" data-list="progress-projects">${(s.projectProgress.projects||[]).map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">项目 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="progress-projects" data-index="${index}">删除</button></div><div class="grid-3">${field("项目名称",`prog-name-${index}`,item.name)}${field("最新进展",`prog-progress-${index}`,item.progress,"textarea")}${field("风险问题",`prog-risk-${index}`,item.risk,"textarea")}</div></div>`).join("")}</div></div>`)}
+        ${panel("甘特阶段","对应顶部甘特图项目与阶段",`<div class="repeat-head"><div class="mini-title">甘特项目</div><button class="mini-btn" type="button" data-add="gantt">新增项目</button></div><div class="repeat-list" data-list="gantt">${s.ganttData.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">甘特项目 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="gantt" data-index="${index}">删除</button></div>${field("项目名称",`gantt-project-${index}`,item.project)}<div class="section"><div class="mini-title">阶段配置</div><div class="phase-grid">${Array.from({length:4},(_,phaseIndex)=>`<div class="subblock"><div class="mini-title">阶段 ${phaseIndex+1}</div>${field("阶段名称",`gantt-phase-name-${index}-${phaseIndex}`,item.phases?.[phaseIndex]?.name||"")}${selectField("阶段类型",`gantt-phase-type-${index}-${phaseIndex}`,item.phases?.[phaseIndex]?.type||"dev",[{value:"dev",label:"开发"},{value:"test",label:"测试"},{value:"online",label:"上线/交付"},{value:"accept",label:"验收"}])}${field("开始月份",`gantt-phase-start-${index}-${phaseIndex}`,item.phases?.[phaseIndex]?.start||1,"number")}${field("结束月份",`gantt-phase-end-${index}-${phaseIndex}`,item.phases?.[phaseIndex]?.end||1,"number")}</div>`).join("")}</div></div></div>`).join("")}</div>`,true)}
+        ${panel("资源投入","对应资源情况卡片全部字段",`<div class="section"><div class="mini-title">利用率</div><div class="grid-4">${field("交付占比",`util-delivery`,s.resourceData.utilization?.delivery,"number")}${field("其他占比",`util-other`,s.resourceData.utilization?.other,"number")}${field("展示百分比",`util-percentage`,s.resourceData.utilization?.percentage,"number")}${field("说明",`util-desc`,s.resourceData.utilization?.desc,"textarea")}</div></div><div class="section"><div class="mini-title">外采占比</div><div class="grid-4">${field("外采占比",`out-outsource`,s.resourceData.outsourcing?.outsource,"number")}${field("内部占比",`out-internal`,s.resourceData.outsourcing?.internal,"number")}${field("展示百分比",`out-percentage`,s.resourceData.outsourcing?.percentage,"number")}${field("说明",`out-desc`,s.resourceData.outsourcing?.desc,"textarea")}</div></div><div class="section"><div class="mini-title">超投情况</div><div class="grid-4">${field("计划投入",`over-planned`,s.resourceData.overrun?.planned,"number")}${field("实际投入",`over-actual`,s.resourceData.overrun?.actual,"number")}${field("展示百分比",`over-percentage`,s.resourceData.overrun?.percentage,"number")}${field("说明",`over-desc`,s.resourceData.overrun?.desc,"textarea")}</div></div><div class="section"><div class="grid-2">${field("统计日期",`resource-date`,s.resourceData.date)}</div></div><div class="section"><div class="repeat-head"><div class="mini-title">项目投入分布</div><button class="mini-btn" type="button" data-add="distribution">新增分布</button></div><div class="repeat-list" data-list="distribution">${(s.resourceData.distribution||[]).map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">分布 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="distribution" data-index="${index}">删除</button></div><div class="grid-2">${field("项目名称",`dist-project-${index}`,item.project)}${field("投入人天",`dist-days-${index}`,item.days,"number")}</div></div>`).join("")}</div></div>`,true)}
+        ${panel("回款明细","对应回款汇总与下方明细表",`<div class="grid-4">${field("合同总额(万)",`pay-total`,s.paymentData.total,"number")}${field("已回款(万)",`pay-received`,s.paymentData.received,"number")}${field("回款率(%)",`pay-rate`,s.paymentData.rate,"number")}${field("回款预测(万)",`pay-forecast`,s.paymentData.forecast,"number")}</div><div class="section"><div class="repeat-head"><div class="mini-title">回款项目</div><button class="mini-btn" type="button" data-add="payment-details">新增项目</button></div><div class="repeat-list" data-list="payment-details">${s.paymentData.details.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">回款项目 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="payment-details" data-index="${index}">删除</button></div><div class="grid-4">${field("项目名称",`pay-project-${index}`,item.project)}${field("合同金额(万)",`pay-amount-${index}`,item.amount,"number")}${field("已回款(万)",`pay-received-row-${index}`,item.received,"number")}${field("节点1",`pay-node1-${index}`,item.node1,"number")}${field("节点2",`pay-node2-${index}`,item.node2,"number")}${field("节点3",`pay-node3-${index}`,item.node3,"number")}${field("节点4",`pay-node4-${index}`,item.node4,"number")}${field("下次回款日期",`pay-nextDate-${index}`,item.nextDate)}</div></div>`).join("")}</div></div>`,true)}
+        ${panel("首页风险概述","对应首页项目交付卡片风险提示",`<div class="repeat-head"><div class="mini-title">风险概述</div><button class="mini-btn" type="button" data-add="risk-summary">新增概述</button></div><div class="repeat-list" data-list="risk-summary">${s.riskSummary.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">风险 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="risk-summary" data-index="${index}">删除</button></div><div class="grid-3">${field("风险类别",`risk-category-${index}`,item.category)}${field("风险概述",`risk-summary-${index}`,item.summary,"textarea")}${selectField("风险等级",`risk-level-${index}`,item.level,[{value:"严重",label:"严重"},{value:"一般",label:"一般"},{value:"轻度",label:"轻度"}])}</div></div>`).join("")}</div>`)}
+      </div>`;
+      applyFieldTooltips();
+    }
+    function collectState(){
+      return {
+        fileName:text(document.getElementById("file-name").value,"表单编辑保存"),
+        updateTime:now(),
+        ganttData:Array.from(document.querySelectorAll('[data-list="gantt"] .repeat-row')).map((row,index)=>({id:index+1,project:text(document.getElementById(`gantt-project-${index}`).value),phases:Array.from({length:4},(_,phaseIndex)=>({name:text(document.getElementById(`gantt-phase-name-${index}-${phaseIndex}`).value),type:text(document.getElementById(`gantt-phase-type-${index}-${phaseIndex}`).value,"dev"),start:num(document.getElementById(`gantt-phase-start-${index}-${phaseIndex}`).value,1),end:num(document.getElementById(`gantt-phase-end-${index}-${phaseIndex}`).value,1)})).filter((item)=>item.name)})).filter((item)=>item.project),
+        projectProgress:{overview:text(document.getElementById("progress-overview").value),projects:Array.from(document.querySelectorAll('[data-list="progress-projects"] .repeat-row')).map((row,index)=>({id:index+1,name:text(document.getElementById(`prog-name-${index}`).value),progress:text(document.getElementById(`prog-progress-${index}`).value),risk:text(document.getElementById(`prog-risk-${index}`).value)})).filter((item)=>item.name)},
+        resourceData:{
+          utilization:{delivery:num(document.getElementById("util-delivery").value),other:num(document.getElementById("util-other").value),percentage:num(document.getElementById("util-percentage").value),desc:text(document.getElementById("util-desc").value)},
+          distribution:Array.from(document.querySelectorAll('[data-list="distribution"] .repeat-row')).map((row,index)=>({project:text(document.getElementById(`dist-project-${index}`).value),days:num(document.getElementById(`dist-days-${index}`).value)})).filter((item)=>item.project),
+          outsourcing:{outsource:num(document.getElementById("out-outsource").value),internal:num(document.getElementById("out-internal").value),percentage:num(document.getElementById("out-percentage").value),desc:text(document.getElementById("out-desc").value)},
+          overrun:{planned:num(document.getElementById("over-planned").value),actual:num(document.getElementById("over-actual").value),percentage:num(document.getElementById("over-percentage").value),desc:text(document.getElementById("over-desc").value)},
+          date:text(document.getElementById("resource-date").value)
+        },
+        paymentData:{total:num(document.getElementById("pay-total").value),received:num(document.getElementById("pay-received").value),rate:num(document.getElementById("pay-rate").value),forecast:num(document.getElementById("pay-forecast").value),details:Array.from(document.querySelectorAll('[data-list="payment-details"] .repeat-row')).map((row,index)=>({id:index+1,project:text(document.getElementById(`pay-project-${index}`).value),amount:num(document.getElementById(`pay-amount-${index}`).value),received:num(document.getElementById(`pay-received-row-${index}`).value),node1:num(document.getElementById(`pay-node1-${index}`).value),node2:num(document.getElementById(`pay-node2-${index}`).value),node3:num(document.getElementById(`pay-node3-${index}`).value),node4:num(document.getElementById(`pay-node4-${index}`).value),nextDate:text(document.getElementById(`pay-nextDate-${index}`).value)})).filter((item)=>item.project)},
+        riskSummary:Array.from(document.querySelectorAll('[data-list="risk-summary"] .repeat-row')).map((row,index)=>({category:text(document.getElementById(`risk-category-${index}`).value),summary:text(document.getElementById(`risk-summary-${index}`).value),level:text(document.getElementById(`risk-level-${index}`).value,"一般")})).filter((item)=>item.category||item.summary)
+      };
+    }
+    function addItem(type){
+      currentState=collectState();
+      if(type==="gantt") currentState.ganttData.push({id:Date.now(),project:"",phases:[{name:"",type:"dev",start:1,end:1}]});
+      if(type==="progress-projects") currentState.projectProgress.projects.push({id:Date.now(),name:"",progress:"",risk:""});
+      if(type==="distribution") currentState.resourceData.distribution.push({project:"",days:0});
+      if(type==="payment-details") currentState.paymentData.details.push({id:Date.now(),project:"",amount:0,received:0,node1:0,node2:0,node3:0,node4:0,nextDate:""});
+      if(type==="risk-summary") currentState.riskSummary.push({category:"",summary:"",level:"一般"});
+      render();
+    }
+    function removeItem(type,index){
+      currentState=collectState();
+      if(type==="gantt") currentState.ganttData.splice(index,1);
+      if(type==="progress-projects") currentState.projectProgress.projects.splice(index,1);
+      if(type==="distribution") currentState.resourceData.distribution.splice(index,1);
+      if(type==="payment-details") currentState.paymentData.details.splice(index,1);
+      if(type==="risk-summary") currentState.riskSummary.splice(index,1);
+      render();
+    }
+    function saveData(){
+      currentState=collectState();
+      if(!window.DashboardSync){statusEl.textContent="保存失败：未检测到同步组件。";return;}
+      window.DashboardSync.persistDepartment("delivery",currentState,buildDeliveryIndexSource(currentState));
+      statusEl.textContent=`已保存并同步项目交付看板，更新时间：${currentState.updateTime}`;
+    }
+    document.addEventListener("click",(event)=>{const addType=event.target.getAttribute("data-add"),removeType=event.target.getAttribute("data-remove");if(addType){addItem(addType);return;}if(removeType){removeItem(removeType,num(event.target.getAttribute("data-index")));}});
+    document.getElementById("save-top").addEventListener("click",saveData);
+    document.getElementById("save-bottom").addEventListener("click",saveData);
+    document.getElementById("reset-btn").addEventListener("click",()=>{currentState=clone(initialState);render();statusEl.textContent="已恢复为打开编辑页时的数据，请重新保存。";});
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status");
+      ["save-top","save-bottom"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

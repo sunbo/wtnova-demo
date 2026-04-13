@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>经营数据卡片编辑</title>
+  <style>
+    :root{
+      --bg:#f5f8fe;
+      --panel:#fff;
+      --panel-soft:#f8fafc;
+      --line:#dbe5f1;
+      --text:#0f172a;
+      --sub:#526077;
+      --muted:#8c97aa;
+      --blue:#0052d9;
+      --blue-dark:#003a99;
+      --shadow:0 12px 30px -24px rgba(15,23,42,.28);
+      --radius:14px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+
+    .page{max-width:1560px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+      margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)
+    }
+    .title-wrap h1{font-size:22px;line-height:1.2}
+    .title-wrap p{margin-top:6px;font-size:12px;color:var(--sub)}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .save-tip{font-size:12px;color:var(--sub)}
+    .save-tip strong{color:var(--blue-dark)}
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      min-width:96px;height:36px;padding:0 14px;border:1px solid var(--line);
+      background:#fff;color:var(--text);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer
+    }
+    .btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}
+    .btn:hover{background:#f5f7fb}
+    .btn-primary:hover{background:linear-gradient(135deg,var(--blue),var(--blue-dark));opacity:.96}
+
+    .layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .panel{
+      background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden
+    }
+    .panel.full{grid-column:1/-1}
+    .panel-head{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)
+    }
+    .panel-title{font-size:16px;font-weight:800}
+    .panel-sub{font-size:12px;color:var(--sub)}
+    .panel-body{padding:14px}
+
+    .grid-2,.grid-3,.grid-4{display:grid;gap:12px}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+    .field,.repeat-row{
+      background:var(--panel-soft);border:1px solid var(--line);padding:10px
+    }
+    .field label,.fieldset-title{
+      display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)
+    }
+    .field label{cursor:help}
+    .field input,.field textarea{
+      width:100%;padding:8px 10px;border:1px solid #cfd9e5;background:#fff;
+      font-size:13px;color:var(--text);outline:none
+    }
+    .field textarea{min-height:82px;resize:vertical}
+    .field input:focus,.field textarea:focus{border-color:var(--blue)}
+    .field-note{margin-top:6px;font-size:11px;color:var(--muted)}
+
+    .fieldset{margin-top:14px}
+    .fieldset:first-child{margin-top:0}
+    .fieldset-title-row{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px
+    }
+    .mini-btn{
+      display:inline-flex;align-items:center;justify-content:center;height:30px;padding:0 12px;
+      border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer
+    }
+    .mini-btn.danger{color:#dc2626}
+
+    .repeat-list{display:flex;flex-direction:column;gap:10px}
+    .repeat-row-head{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px
+    }
+    .repeat-row-title{font-size:12px;font-weight:800;color:var(--sub)}
+
+    .status-bar{
+      position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);
+      border:1px solid var(--line);box-shadow:var(--shadow);
+      display:flex;justify-content:space-between;align-items:center;gap:12px;backdrop-filter:blur(6px)
+    }
+    .status-msg{font-size:12px;color:var(--sub)}
+    .status-msg.ok{color:var(--blue-dark)}
+
+    @media (max-width:1080px){
+      .layout,.grid-4,.grid-3{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:720px){
+      .layout,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+      .status-bar{flex-direction:column;align-items:stretch}
+    }
+
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>经营数据卡片编辑</h1>
+        <p>通过表单维护首页“经营数据”卡片中的达成率与核心 KPI 数据，保存后立即同步更新 index 页面展示。</p>
+      </div>
+      <div class="top-actions">
+        <div class="save-tip">当前数据来源：<strong>本地已保存经营数据卡片状态</strong></div>
+        <a class="btn" href="./index.html" target="_blank" rel="noopener noreferrer">查看首页</a>
+        <button class="btn btn-primary" type="button" id="save-top-btn">保存</button>
+      </div>
+    </div>
+
+    <form id="overview-editor-form">
+      <div id="app"></div>
+    </form>
+
+    <div class="status-bar">
+      <div id="status-msg" class="status-msg">未保存修改。</div>
+      <div class="top-actions">
+        <button class="btn" type="button" id="reset-btn">恢复初始</button>
+        <button class="btn btn-primary" type="button" id="save-bottom-btn">保存并更新首页</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const defaultState = {
+      charts: [
+        {
+          title: "收入达成率",
+          targetLabel: "2026年收入目标",
+          targetValue: "4000万",
+          actualLabel: "年度收入合计",
+          actualValue: "0万",
+          rate: 0,
+          displayRate: "0%"
+        },
+        {
+          title: "利润达成率",
+          targetLabel: "2026年毛利润目标",
+          targetValue: "700万",
+          actualLabel: "年度毛利合计",
+          actualValue: "-44.2万",
+          rate: -6.31,
+          displayRate: "-6.31%"
+        }
+      ],
+      unitNote: "单位：万元，毛利率按 %",
+      kpis: [
+        {
+          label: "收入",
+          annualTarget: "4000",
+          q1: "50",
+          q2: "950",
+          q3: "2000",
+          q4: "1000",
+          currentMonth: "0",
+          accumulative: "0",
+          quarterRate: "/",
+          annualRate: "/",
+          gap: "50",
+          lastYear: "/",
+          yoy: "/"
+        },
+        {
+          label: "毛利润",
+          annualTarget: "700",
+          q1: "5",
+          q2: "185",
+          q3: "300",
+          q4: "210",
+          currentMonth: "-44.2",
+          accumulative: "-44.2",
+          quarterRate: "-884%",
+          annualRate: "-6.31%",
+          gap: "49.2",
+          lastYear: "/",
+          yoy: "/"
+        },
+        {
+          label: "毛利率",
+          annualTarget: "18%",
+          q1: "10%",
+          q2: "19%",
+          q3: "15%",
+          q4: "21%",
+          currentMonth: "/",
+          accumulative: "/",
+          quarterRate: "/",
+          annualRate: "/",
+          gap: "/",
+          lastYear: "/",
+          yoy: "/"
+        }
+      ],
+      updateTime: "",
+      fileName: "表单编辑保存"
+    };
+
+    const KPI_FIELDS = [
+      ["label", "KPI指标"],
+      ["annualTarget", "年度目标"],
+      ["q1", "Q1目标"],
+      ["q2", "Q2目标"],
+      ["q3", "Q3目标"],
+      ["q4", "Q4目标"],
+      ["currentMonth", "当月完成"],
+      ["accumulative", "累计完成"],
+      ["quarterRate", "季度完成"],
+      ["annualRate", "年度完成"],
+      ["gap", "目标差距"],
+      ["lastYear", "上年同期"],
+      ["yoy", "同比增长"]
+    ];
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function text(value, fallback = "") {
+      const normalized = String(value ?? "").trim();
+      return normalized || fallback;
+    }
+
+    function parseNumber(value, fallback = 0) {
+      const normalized = Number(String(value ?? "").replace(/,/g, "").replace(/[^\d.-]/g, ""));
+      return Number.isFinite(normalized) ? normalized : fallback;
+    }
+
+    function formatNow() {
+      const now = new Date();
+      const pad = (num) => String(num).padStart(2, "0");
+      return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function normalizeChart(chart, digits) {
+      const next = {
+        title: text(chart.title),
+        targetLabel: text(chart.targetLabel),
+        targetValue: text(chart.targetValue),
+        actualLabel: text(chart.actualLabel),
+        actualValue: text(chart.actualValue)
+      };
+      const target = parseNumber(next.targetValue, 0);
+      const actual = parseNumber(next.actualValue, 0);
+      const rate = target > 0 ? (actual / target) * 100 : 0;
+      next.rate = rate;
+      next.displayRate = `${rate.toFixed(digits)}%`;
+      return next;
+    }
+
+    function normalizedState(rawState) {
+      const state = deepClone(rawState);
+      const charts = [
+        normalizeChart(state.charts[0] || defaultState.charts[0], 0),
+        normalizeChart(state.charts[1] || defaultState.charts[1], 2)
+      ];
+      const kpis = (Array.isArray(state.kpis) && state.kpis.length ? state.kpis : defaultState.kpis).map((item, index) => {
+        const base = defaultState.kpis[Math.min(index, defaultState.kpis.length - 1)] || defaultState.kpis[0];
+        return KPI_FIELDS.reduce((result, field) => {
+          result[field[0]] = text(item[field[0]], base[field[0]] || "");
+          return result;
+        }, {});
+      });
+      return {
+        charts,
+        unitNote: text(state.unitNote, defaultState.unitNote),
+        kpis,
+        updateTime: formatNow(),
+        fileName: "表单编辑保存"
+      };
+    }
+
+    const app = document.getElementById("app");
+    const statusMsg = document.getElementById("status-msg");
+    const storedState = window.DashboardSync
+      ? window.DashboardSync.getStoredPageState("overview", deepClone(defaultState))
+      : deepClone(defaultState);
+    const initialState = normalizedState(storedState);
+    let currentState = deepClone(initialState);
+
+    function panel(title, subtitle, body, full) {
+      return `<section class="panel${full ? " full" : ""}">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">${title}</div>
+            <div class="panel-sub">${subtitle}</div>
+          </div>
+        </div>
+        <div class="panel-body">${body}</div>
+      </section>`;
+    }
+
+    function inputField(label, id, value, type, note) {
+      return `<div class="field">
+        <label for="${id}">${label}</label>
+        <input id="${id}" type="${type || "text"}" value="${String(value ?? "")}">
+        ${note ? `<div class="field-note">${note}</div>` : ""}
+      </div>`;
+    }
+
+    function renderChartEditor(chart, index) {
+      const scope = index === 0 ? "收入达成率" : "利润达成率";
+      return `<div class="repeat-row">
+        <div class="repeat-row-head">
+          <div class="repeat-row-title">${scope}</div>
+        </div>
+        <div class="grid-2">
+          ${inputField("卡片标题", `chart-title-${index}`, chart.title, "text", "对应经营数据卡片上半区的小卡片标题")}
+          ${inputField("目标标签", `chart-target-label-${index}`, chart.targetLabel, "text", "对应小卡片左侧上方的目标说明")}
+          ${inputField("目标值", `chart-target-value-${index}`, chart.targetValue, "text", "对应小卡片左侧目标数值")}
+          ${inputField("实际标签", `chart-actual-label-${index}`, chart.actualLabel, "text", "对应小卡片左侧下方的累计说明")}
+          ${inputField("实际值", `chart-actual-value-${index}`, chart.actualValue, "text", "对应小卡片左侧累计数值，并自动计算右侧环图比例")}
+        </div>
+      </div>`;
+    }
+
+    function renderKpis(items) {
+      return `<div class="repeat-list">
+        ${items.map((item, index) => `
+          <div class="repeat-row" data-index="${index}">
+            <div class="repeat-row-head">
+              <div class="repeat-row-title">KPI 行 ${index + 1}</div>
+              <button class="mini-btn danger" type="button" data-remove-kpi="${index}">删除</button>
+            </div>
+            <div class="grid-4">
+              ${KPI_FIELDS.slice(0, 4).map((field) => inputField(field[1], `kpi-${field[0]}-${index}`, item[field[0]], "text", "对应核心KPI表格中的列值")).join("")}
+            </div>
+            <div class="grid-4" style="margin-top:12px">
+              ${KPI_FIELDS.slice(4, 8).map((field) => inputField(field[1], `kpi-${field[0]}-${index}`, item[field[0]], "text", "对应核心KPI表格中的列值")).join("")}
+            </div>
+            <div class="grid-4" style="margin-top:12px">
+              ${KPI_FIELDS.slice(8).map((field) => inputField(field[1], `kpi-${field[0]}-${index}`, item[field[0]], "text", "对应核心KPI表格中的列值")).join("")}
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function plainText(value) {
+      return String(value ?? "").replace(/\s+/g, " ").trim();
+    }
+
+    function applyFieldTooltips() {
+      document.querySelectorAll(".field").forEach((fieldEl) => {
+        const labelEl = fieldEl.querySelector("label");
+        const controlEl = fieldEl.querySelector("input, textarea");
+        if (!labelEl || !controlEl) return;
+        const labelText = plainText(labelEl.textContent);
+        const panelTitle = plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent) || "当前编辑区";
+        const rowTitle = plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-row-title")?.textContent);
+        const scope = rowTitle ? `${panelTitle} / ${rowTitle}` : panelTitle;
+        const tooltip = `字段：${labelText}。位置：${scope}。用途：用于配置首页“经营数据”卡片中的对应显示内容。`;
+        fieldEl.title = tooltip;
+        labelEl.title = tooltip;
+        controlEl.title = tooltip;
+      });
+    }
+
+    function render() {
+      app.innerHTML = `<div class="layout">
+        ${panel("基本设置", "对应经营数据卡片中的通用说明", `
+          <div class="grid-2">
+            ${inputField("单位说明", "unit-note", currentState.unitNote, "text", "对应核心KPI标题右侧的单位说明")}
+          </div>
+        `, true)}
+
+        ${panel("顶部达成率卡片", "对应经营数据卡片上半区的两张达成率小卡片", `
+          <div class="repeat-list">
+            ${renderChartEditor(currentState.charts[0], 0)}
+            ${renderChartEditor(currentState.charts[1], 1)}
+          </div>
+        `, true)}
+
+        ${panel("核心KPI指标", "对应经营数据卡片下半区的 KPI 表格数据", `
+          <div class="fieldset-title-row">
+            <div class="fieldset-title">KPI 行配置</div>
+            <button class="mini-btn" type="button" id="add-kpi-btn">新增KPI行</button>
+          </div>
+          ${renderKpis(currentState.kpis)}
+        `, true)}
+      </div>`;
+      applyFieldTooltips();
+    }
+
+    function collectState() {
+      const next = deepClone(currentState);
+      next.unitNote = text(document.getElementById("unit-note").value, defaultState.unitNote);
+      next.charts = next.charts.map((chart, index) => ({
+        title: text(document.getElementById(`chart-title-${index}`).value, chart.title),
+        targetLabel: text(document.getElementById(`chart-target-label-${index}`).value, chart.targetLabel),
+        targetValue: text(document.getElementById(`chart-target-value-${index}`).value, chart.targetValue),
+        actualLabel: text(document.getElementById(`chart-actual-label-${index}`).value, chart.actualLabel),
+        actualValue: text(document.getElementById(`chart-actual-value-${index}`).value, chart.actualValue)
+      }));
+      next.kpis = next.kpis.map((item, index) => KPI_FIELDS.reduce((result, field) => {
+        result[field[0]] = text(document.getElementById(`kpi-${field[0]}-${index}`).value, item[field[0]]);
+        return result;
+      }, {}));
+      return normalizedState(next);
+    }
+
+    function saveData() {
+      currentState = collectState();
+      if (window.DashboardSync) {
+        window.DashboardSync.persistDepartment("overview", currentState, currentState);
+      }
+      statusMsg.textContent = `已保存并同步首页，更新时间：${currentState.updateTime}`;
+      statusMsg.className = "status-msg ok";
+      render();
+    }
+
+    function addKpi() {
+      currentState.kpis.push(deepClone(defaultState.kpis[defaultState.kpis.length - 1]));
+      statusMsg.textContent = "已新增 KPI 行，请继续填写后保存。";
+      statusMsg.className = "status-msg";
+      render();
+    }
+
+    function removeKpi(index) {
+      if (currentState.kpis.length <= 1) return;
+      currentState.kpis.splice(index, 1);
+      statusMsg.textContent = "已删除 KPI 行，请记得保存。";
+      statusMsg.className = "status-msg";
+      render();
+    }
+
+    document.addEventListener("click", (event) => {
+      if (event.target.id === "add-kpi-btn") {
+        addKpi();
+        return;
+      }
+      if (event.target.hasAttribute("data-remove-kpi")) {
+        removeKpi(Number(event.target.getAttribute("data-remove-kpi")));
+      }
+    });
+
+    document.getElementById("save-top-btn").addEventListener("click", saveData);
+    document.getElementById("save-bottom-btn").addEventListener("click", saveData);
+    document.getElementById("reset-btn").addEventListener("click", () => {
+      currentState = deepClone(initialState);
+      statusMsg.textContent = "已恢复为打开编辑页时的内容，请重新保存。";
+      statusMsg.className = "status-msg";
+      render();
+    });
+
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status-msg");
+      ["save-top-btn","save-bottom-btn"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

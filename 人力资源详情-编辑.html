@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人力资源详情-编辑</title>
+  <style>
+    :root{--bg:#f5f8fe;--panel:#fff;--soft:#f8fafc;--line:#dbe5f1;--text:#0f172a;--sub:#526077;--blue:#0052d9;--blue-dark:#003a99;--red:#dc2626;--shadow:0 12px 30px -24px rgba(15,23,42,.28);--radius:14px}
+    *{box-sizing:border-box;margin:0;padding:0} body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+    .page{max-width:1500px;margin:0 auto;padding:18px}.topbar,.head,.repeat-head,.sticky{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.topbar{flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}.title h1{font-size:22px;line-height:1.2}.title p,.status{font-size:12px;color:var(--sub)}.actions{display:flex;gap:10px;flex-wrap:wrap}.layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.panel.full{grid-column:1/-1}.head{padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)}.panel-title{font-size:16px;font-weight:800}.panel-sub{font-size:12px;color:var(--sub)}.body{padding:14px}
+    .grid-2,.grid-3,.grid-4{display:grid;gap:12px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .field,.repeat-row{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}.field label,.mini-title{display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)} .field label{cursor:help} input,select,textarea{width:100%;padding:8px 10px;border:1px solid #cfd9e5;border-radius:10px;background:#fff;font-size:13px;color:var(--text);outline:none} textarea{min-height:80px;resize:vertical}.repeat-list{display:flex;flex-direction:column;gap:10px}.repeat-head{margin-bottom:8px}.repeat-title{font-size:12px;font-weight:800;color:var(--sub)}
+    .btn,.mini-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text);cursor:pointer;text-decoration:none;font-weight:700}.btn{height:36px;padding:0 14px;font-size:13px}.btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}.mini-btn{height:30px;padding:0 12px;font-size:12px;color:var(--blue)}.mini-btn.danger{color:var(--red)}.sticky{position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+    @media (max-width:1080px){.layout,.grid-4,.grid-3{grid-template-columns:1fr 1fr}} @media (max-width:720px){.layout,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}.sticky,.topbar{flex-direction:column;align-items:stretch}}
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">
+        <h1>人力资源详情编辑</h1>
+        <p>保存后同步更新“人力资源数据看板”，可完整维护招聘、员工关系、部门编制和首页风险概述。</p>
+      </div>
+      <div class="actions">
+        <a class="btn" href="./人力资源数据看板.html" target="_blank" rel="noopener noreferrer">查看看板</a>
+        <button class="btn btn-primary" type="button" id="save-top">保存</button>
+      </div>
+    </div>
+    <form><div id="app"></div></form>
+    <div class="sticky">
+      <div id="status" class="status">未保存修改。</div>
+      <div class="actions">
+        <button class="btn" type="button" id="reset-btn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="save-bottom">保存并更新看板</button>
+      </div>
+    </div>
+  </div>
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const clone=(v)=>JSON.parse(JSON.stringify(v));
+    const now=()=>{const d=new Date(),p=(n)=>String(n).padStart(2,"0");return `${d.getFullYear()}年${p(d.getMonth()+1)}月${p(d.getDate())}日 ${p(d.getHours())}:${p(d.getMinutes())}`;};
+    const num=(v,f=0)=>{const n=Number(String(v??"").replace(/,/g,"").trim());return Number.isFinite(n)?n:f;};
+    const text=(v,f="")=>{const t=String(v??"").trim();return t||f;};
+    const blankState=()=>({recruitmentData:[],employeeRelationsData:{events:[]},departmentData:[],riskSummary:[{category:"",summary:"",level:"一般"}],fileName:"表单编辑保存",updateTime:now()});
+    const buildHrIndexSource=(pageState)=>({key:"hr",updateTime:pageState.updateTime,fileName:pageState.fileName,recruitmentData:pageState.recruitmentData,employeeRelationsData:pageState.employeeRelationsData,departmentData:pageState.departmentData,riskSummary:pageState.riskSummary});
+    let currentState=window.DashboardSync?window.DashboardSync.getStoredPageState("hr",blankState()):blankState();
+    const initialState=clone(currentState);
+    const app=document.getElementById("app"),statusEl=document.getElementById("status");
+    const panel=(title,sub,body,full=false)=>`<section class="panel${full?" full":""}"><div class="head"><div><div class="panel-title">${title}</div><div class="panel-sub">${sub}</div></div></div><div class="body">${body}</div></section>`;
+    const field=(label,id,value,type="text")=>`<div class="field"><label for="${id}">${label}</label>${type==="textarea"?`<textarea id="${id}">${String(value??"")}</textarea>`:`<input id="${id}" type="${type}" value="${type==="number"?num(value):String(value??"")}">`}</div>`;
+    const selectField=(label,id,value,options)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${options.map((item)=>`<option value="${item.value}"${item.value===value?" selected":""}>${item.label}</option>`).join("")}</select></div>`;
+    function plainText(value){return String(value??"").replace(/\s+/g," ").trim();}
+    function applyFieldTooltips(){
+      document.querySelectorAll(".field").forEach((fieldEl)=>{
+        const labelEl=fieldEl.querySelector("label");
+        const controlEl=fieldEl.querySelector("input, select, textarea");
+        if(!labelEl||!controlEl)return;
+        const labelText=plainText(labelEl.textContent);
+        const panelTitle=plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent)||"当前编辑区";
+        const rowTitle=plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-title")?.textContent);
+        const scopeParts=[panelTitle];
+        if(rowTitle)scopeParts.push(rowTitle);
+        const tooltip=`字段：${labelText}。位置：${scopeParts.join(" / ")}。用途：用于配置看板中“${panelTitle}”区域的对应显示内容。`;
+        fieldEl.title=tooltip;
+        labelEl.title=tooltip;
+        controlEl.title=tooltip;
+      });
+    }
+    function render(){
+      const s=currentState;
+      app.innerHTML=`<div class="layout">
+        ${panel("基本设置","配置保存来源名",`<div class="grid-2">${field("来源文件名","file-name",s.fileName||"表单编辑保存")}</div>`)}
+        ${panel("员工关系事件","对应人力资源卡片顶部统计事件",`<div class="repeat-head"><div class="mini-title">事件</div><button class="mini-btn" type="button" data-add="events">新增事件</button></div><div class="repeat-list" data-list="events">${(s.employeeRelationsData.events||[]).map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">事件 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="events" data-index="${index}">删除</button></div><div class="grid-2">${field("事件名称",`event-type-${index}`,item.type)}${field("数量",`event-count-${index}`,item.count,"number")}</div></div>`).join("")}</div>`)}
+        ${panel("招聘明细","对应招聘流程表格和四块统计数据",`<div class="repeat-head"><div class="mini-title">招聘岗位</div><button class="mini-btn" type="button" data-add="recruitment">新增岗位</button></div><div class="repeat-list" data-list="recruitment">${s.recruitmentData.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">岗位 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="recruitment" data-index="${index}">删除</button></div><div class="grid-4">${field("岗位名称",`rec-position-${index}`,item.position)}${field("所属部门",`rec-department-${index}`,item.department)}${field("职级",`rec-level-${index}`,item.level)}${selectField("紧急程度",`rec-urgency-${index}`,item.urgency,[{value:"非常高",label:"非常高"},{value:"高",label:"高"},{value:"中",label:"中"},{value:"低",label:"低"}])}${field("需求发布",`rec-demand-${index}`,item.demand,"number")}${field("简历储备",`rec-resume-${index}`,item.resume,"number")}${field("一面推进",`rec-first-${index}`,item.firstInterview,"number")}${field("二面推进",`rec-second-${index}`,item.secondInterview,"number")}${field("offer",`rec-offer-${index}`,item.offer,"number")}${field("入职",`rec-onboarded-${index}`,item.onboarded,"number")}</div></div>`).join("")}</div>`,true)}
+        ${panel("部门编制","对应部门编制与缺编表格",`<div class="repeat-head"><div class="mini-title">部门编制</div><button class="mini-btn" type="button" data-add="departments">新增部门</button></div><div class="repeat-list" data-list="departments">${s.departmentData.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">部门 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="departments" data-index="${index}">删除</button></div><div class="grid-4">${field("部门名称",`dept-name-${index}`,item.department)}${field("编制人数",`dept-total-${index}`,item.totalPositions,"number")}${field("当前人数",`dept-current-${index}`,item.currentStaff,"number")}${field("缺编人数",`dept-vacant-${index}`,item.vacant,"number")}</div></div>`).join("")}</div>`)}
+        ${panel("首页风险概述","对应首页人力资源卡片风险提示",`<div class="repeat-head"><div class="mini-title">风险概述</div><button class="mini-btn" type="button" data-add="risk-summary">新增概述</button></div><div class="repeat-list" data-list="risk-summary">${s.riskSummary.map((item,index)=>`<div class="repeat-row"><div class="repeat-head"><div class="repeat-title">风险 ${index+1}</div><button class="mini-btn danger" type="button" data-remove="risk-summary" data-index="${index}">删除</button></div><div class="grid-3">${field("风险类别",`risk-category-${index}`,item.category)}${field("风险概述",`risk-summary-${index}`,item.summary,"textarea")}${selectField("风险等级",`risk-level-${index}`,item.level,[{value:"严重",label:"严重"},{value:"一般",label:"一般"},{value:"轻度",label:"轻度"}])}</div></div>`).join("")}</div>`)}
+      </div>`;
+      applyFieldTooltips();
+    }
+    function collectState(){
+      return {
+        fileName:text(document.getElementById("file-name").value,"表单编辑保存"),
+        updateTime:now(),
+        recruitmentData:Array.from(document.querySelectorAll('[data-list="recruitment"] .repeat-row')).map((row,index)=>({id:index+1,position:text(document.getElementById(`rec-position-${index}`).value),department:text(document.getElementById(`rec-department-${index}`).value),level:text(document.getElementById(`rec-level-${index}`).value),urgency:text(document.getElementById(`rec-urgency-${index}`).value,"中"),demand:num(document.getElementById(`rec-demand-${index}`).value),resume:num(document.getElementById(`rec-resume-${index}`).value),firstInterview:num(document.getElementById(`rec-first-${index}`).value),secondInterview:num(document.getElementById(`rec-second-${index}`).value),offer:num(document.getElementById(`rec-offer-${index}`).value),onboarded:num(document.getElementById(`rec-onboarded-${index}`).value)})).filter((item)=>item.position),
+        employeeRelationsData:{events:Array.from(document.querySelectorAll('[data-list="events"] .repeat-row')).map((row,index)=>({type:text(document.getElementById(`event-type-${index}`).value),count:num(document.getElementById(`event-count-${index}`).value)})).filter((item)=>item.type)},
+        departmentData:Array.from(document.querySelectorAll('[data-list="departments"] .repeat-row')).map((row,index)=>({department:text(document.getElementById(`dept-name-${index}`).value),totalPositions:num(document.getElementById(`dept-total-${index}`).value),currentStaff:num(document.getElementById(`dept-current-${index}`).value),vacant:num(document.getElementById(`dept-vacant-${index}`).value)})).filter((item)=>item.department),
+        riskSummary:Array.from(document.querySelectorAll('[data-list="risk-summary"] .repeat-row')).map((row,index)=>({category:text(document.getElementById(`risk-category-${index}`).value),summary:text(document.getElementById(`risk-summary-${index}`).value),level:text(document.getElementById(`risk-level-${index}`).value,"一般")})).filter((item)=>item.category||item.summary)
+      };
+    }
+    function addItem(type){
+      currentState=collectState();
+      if(type==="events") currentState.employeeRelationsData.events.push({type:"",count:0});
+      if(type==="recruitment") currentState.recruitmentData.push({id:Date.now(),position:"",department:"",level:"",urgency:"中",demand:0,resume:0,firstInterview:0,secondInterview:0,offer:0,onboarded:0});
+      if(type==="departments") currentState.departmentData.push({department:"",totalPositions:0,currentStaff:0,vacant:0});
+      if(type==="risk-summary") currentState.riskSummary.push({category:"",summary:"",level:"一般"});
+      render();
+    }
+    function removeItem(type,index){
+      currentState=collectState();
+      if(type==="events") currentState.employeeRelationsData.events.splice(index,1);
+      if(type==="recruitment") currentState.recruitmentData.splice(index,1);
+      if(type==="departments") currentState.departmentData.splice(index,1);
+      if(type==="risk-summary") currentState.riskSummary.splice(index,1);
+      render();
+    }
+    function saveData(){
+      currentState=collectState();
+      if(!window.DashboardSync){statusEl.textContent="保存失败：未检测到同步组件。";return;}
+      window.DashboardSync.persistDepartment("hr",currentState,buildHrIndexSource(currentState));
+      statusEl.textContent=`已保存并同步人力资源看板，更新时间：${currentState.updateTime}`;
+    }
+    document.addEventListener("click",(event)=>{const addType=event.target.getAttribute("data-add"),removeType=event.target.getAttribute("data-remove");if(addType){addItem(addType);return;}if(removeType){removeItem(removeType,num(event.target.getAttribute("data-index")));}});
+    document.getElementById("save-top").addEventListener("click",saveData);
+    document.getElementById("save-bottom").addEventListener("click",saveData);
+    document.getElementById("reset-btn").addEventListener("click",()=>{currentState=clone(initialState);render();statusEl.textContent="已恢复为打开编辑页时的数据，请重新保存。";});
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status");
+      ["save-top","save-bottom"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -690,18 +690,50 @@
         }
 
         .card-header {
-            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 56px !important;
+            padding: 8px 12px !important;
             background: #fbfdff !important;
         }
 
+        .card-header>div:first-child {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            min-height: 38px !important;
+            gap: 2px !important;
+        }
+
         .card-title {
+            display: block !important;
             font-size: 13px !important;
+            line-height: 17px !important;
             font-weight: 700 !important;
             gap: 0 !important;
+            margin: 0 !important;
         }
 
         .card-title .icon {
             display: none !important;
+        }
+
+        .card-subtitle {
+            display: block !important;
+            width: 100% !important;
+            min-height: auto !important;
+            font-size: 10px !important;
+            color: var(--text-muted) !important;
+            line-height: 1.32 !important;
+            margin: 0 !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
         }
 
         .card-body {
@@ -892,7 +924,27 @@
             color:var(--primary-color) !important;
             opacity:1 !important;
         }
+        .opp-stat-item .stat-label,
+        .opp-stat-item .stat-value,
+        .opp-stat-item .stat-unit,
+        .resource-item .label,
+        .resource-item .value,
+        .resource-item .value.danger,
+        .resource-item .value.success{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
+        .opp-stat-item:nth-child(1) .stat-value,
+        .opp-stat-item.cyan .stat-value,
+        .opp-stat-item.emerald .stat-value,
+        .opp-stat-item .stat-unit{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
         .win-rate-fill{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+        :is([class*="card"], [class*="panel"], [class*="item"], [class*="box"], [class*="road"], [class*="scroll"], .field, .repeat-row, .subblock, .sticky, .modal) {
+            border-radius: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -905,9 +957,10 @@
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <!-- SheetJS -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./dashboard-sync.js"></script>
 
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useRef, useEffect } = React;
 
         // 默认目标数据
         const defaultTargetData = {
@@ -950,6 +1003,10 @@
             gap: 3
         };
 
+        const defaultRiskSummary = [
+            { category: '商机', summary: '签单与商机储备并行推进，人力缺口仍在', level: '一般' }
+        ];
+
         const getSheetNameV2 = (workbook, candidates) => candidates.find((name) => workbook.SheetNames.includes(name));
         const toNumberV2 = (value, fallback = 0) => {
             const num = Number(value);
@@ -960,6 +1017,39 @@
             const text = String(value).trim();
             return text || fallback;
         };
+
+        const formatNowV2 = () => {
+            const now = new Date();
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}时${pad(now.getMinutes())}分`;
+        };
+
+        const parseRiskSummarySheetV2 = (workbook) => {
+            const riskSheetName = getSheetNameV2(workbook, ['风险概述']);
+            if (!riskSheetName) return null;
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[riskSheetName], { defval: '' });
+            const items = rows
+                .filter((row) => toTextV2(row['风险类别']) || toTextV2(row['风险概述']))
+                .map((row) => ({
+                    category: toTextV2(row['风险类别']),
+                    summary: toTextV2(row['风险概述']),
+                    level: toTextV2(row['风险等级'], '一般')
+                }))
+                .filter((item) => item.category || item.summary);
+            return items.length > 0 ? items : null;
+        };
+
+        const buildSolutionIndexSource = ({ targetData, customContracts, dayContracts, opportunities, resourceData, riskSummary, updateTime, fileName }) => ({
+            key: 'solution',
+            updateTime,
+            fileName,
+            targetData,
+            customContracts,
+            dayContracts,
+            opportunities,
+            resourceData,
+            riskSummary
+        });
 
         // 饼图组件
         const PieChart = ({ data, colors, total, unit }) => {
@@ -1046,9 +1136,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📈</span>
-                            本年签约目标进展
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📈</span>
+                                本年签约目标进展
+                            </div>
+                            <div className="card-subtitle">展示签约、回款、商机与待签结构</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1117,9 +1210,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">💼</span>
-                            LTC商机到回款
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">💼</span>
+                                LTC商机到回款
+                            </div>
+                            <div className="card-subtitle">展示定制与人天合同从签约到回款状态</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1245,9 +1341,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">🎯</span>
-                            重点商机盘点
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">🎯</span>
+                                重点商机盘点
+                            </div>
+                            <div className="card-subtitle">展示重点商机金额、赢率与预计时间</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1315,9 +1414,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">👥</span>
-                            部门投入资源
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">👥</span>
+                                部门投入资源
+                            </div>
+                            <div className="card-subtitle">展示部门总人数、项目支持与缺口</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1342,18 +1444,57 @@
 
         // 主应用组件
         const App = () => {
-            const [targetData, setTargetData] = useState(defaultTargetData);
-            const [customContracts, setCustomContracts] = useState(defaultCustomContracts);
-            const [dayContracts, setDayContracts] = useState(defaultDayContracts);
-            const [opportunities, setOpportunities] = useState(defaultOpportunities);
-            const [resourceData, setResourceData] = useState(defaultResourceData);
-            const [fileName, setFileName] = useState('');
+            const persistedState = window.DashboardSync?.getStoredPageState('solution', {
+                targetData: defaultTargetData,
+                customContracts: defaultCustomContracts,
+                dayContracts: defaultDayContracts,
+                opportunities: defaultOpportunities,
+                resourceData: defaultResourceData,
+                riskSummary: defaultRiskSummary,
+                updateTime: formatNowV2(),
+                fileName: ''
+            }) || {};
+
+            const [targetData, setTargetData] = useState(persistedState.targetData || defaultTargetData);
+            const [customContracts, setCustomContracts] = useState(persistedState.customContracts || defaultCustomContracts);
+            const [dayContracts, setDayContracts] = useState(persistedState.dayContracts || defaultDayContracts);
+            const [opportunities, setOpportunities] = useState(persistedState.opportunities || defaultOpportunities);
+            const [resourceData, setResourceData] = useState(persistedState.resourceData || defaultResourceData);
+            const [riskSummary, setRiskSummary] = useState(persistedState.riskSummary || defaultRiskSummary);
+            const [fileName, setFileName] = useState(persistedState.fileName || '');
+            const [updateTime, setUpdateTime] = useState(persistedState.updateTime || formatNowV2());
             const fileInputRef = useRef(null);
-            const updateTime = (() => {
-                const now = new Date();
-                const pad = (num) => String(num).padStart(2, '0');
-                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
-            })();
+
+            useEffect(() => {
+                if (!window.DashboardSync) return;
+                const pageState = { targetData, customContracts, dayContracts, opportunities, resourceData, riskSummary, updateTime, fileName };
+                window.DashboardSync.persistDepartment('solution', pageState, buildSolutionIndexSource(pageState));
+            }, [targetData, customContracts, dayContracts, opportunities, resourceData, riskSummary, updateTime, fileName]);
+
+            useEffect(() => {
+                const handleStorageSync = (event) => {
+                    if (!event.key || event.key !== 'zuozhanshi_v6_dashboard:page:solution' || !window.DashboardSync) return;
+                    const latestState = window.DashboardSync.getStoredPageState('solution', null);
+                    if (!latestState) return;
+                    setTargetData(latestState.targetData || defaultTargetData);
+                    setCustomContracts(latestState.customContracts || defaultCustomContracts);
+                    setDayContracts(latestState.dayContracts || defaultDayContracts);
+                    setOpportunities(latestState.opportunities || defaultOpportunities);
+                    setResourceData(latestState.resourceData || defaultResourceData);
+                    setRiskSummary(latestState.riskSummary || defaultRiskSummary);
+                    setFileName(latestState.fileName || '');
+                    setUpdateTime(latestState.updateTime || formatNowV2());
+                };
+
+                window.addEventListener('storage', handleStorageSync);
+                return () => {
+                    window.removeEventListener('storage', handleStorageSync);
+                };
+            }, []);
+
+            const openSolutionEditor = () => {
+                window.open('./售前商机详情-编辑.html', '_blank', 'noopener,noreferrer');
+            };
 
             const handleFileUploadV2 = (e) => {
                 const file = e.target.files[0];
@@ -1483,6 +1624,13 @@
                             }
                         }
 
+                        const parsedRiskSummary = parseRiskSummarySheetV2(workbook);
+                        if (parsedRiskSummary) {
+                            setRiskSummary(parsedRiskSummary);
+                        }
+
+                        setUpdateTime(formatNowV2());
+
                     } catch (error) {
                         console.error('解析Excel失败:', error);
                         alert('解析Excel文件失败，请检查文件格式');
@@ -1500,6 +1648,14 @@
                             <span>更新时间：<strong>{updateTime}</strong></span>
                         </div>
                         <div className="actions">
+                            <button
+                                className="btn btn-outline"
+                                type="button"
+                                onClick={openSolutionEditor}
+                            >
+                                <span>✎</span>
+                                编辑
+                            </button>
                             <a
                                 className="btn btn-outline"
                                 href="../作战室数据导入模板/解决方案部-数据导入模板V2.xlsx"
@@ -1517,6 +1673,7 @@
                             />
                             <button
                                 className="btn btn-primary"
+                                type="button"
                                 onClick={() => fileInputRef.current.click()}
                             >
                                 <span>📤</span>

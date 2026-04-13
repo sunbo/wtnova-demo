@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>财务部数据看板编辑</title>
+  <style>
+    :root{
+      --bg:#f5f8fe;
+      --panel:#fff;
+      --panel-soft:#f8fafc;
+      --line:#dbe5f1;
+      --text:#0f172a;
+      --sub:#526077;
+      --muted:#8c97aa;
+      --blue:#0052d9;
+      --blue-dark:#003a99;
+      --green:#2f7bff;
+      --amber:#d97706;
+      --red:#dc2626;
+      --shadow:0 12px 30px -24px rgba(15,23,42,.28);
+      --radius:14px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+
+    .page{max-width:1480px;margin:0 auto;padding:18px}
+    .topbar{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;
+      margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)
+    }
+    .title-wrap h1{font-size:22px;line-height:1.2}
+    .title-wrap p{margin-top:6px;font-size:12px;color:var(--sub)}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .save-tip{font-size:12px;color:var(--sub)}
+    .save-tip strong{color:var(--blue-dark)}
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:6px;
+      min-width:96px;height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);
+      background:#fff;color:var(--text);font-size:13px;font-weight:700;text-decoration:none;cursor:pointer
+    }
+    .btn-primary{background:linear-gradient(135deg,var(--blue),var(--blue-dark));border-color:var(--blue);color:#fff}
+    .btn:hover{background:#f5f7fb}
+    .btn-primary:hover{background:linear-gradient(135deg,var(--blue),var(--blue-dark));opacity:.96}
+
+    .layout{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .panel{
+      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+      box-shadow:var(--shadow);overflow:hidden
+    }
+    .panel.full{grid-column:1 / -1}
+    .panel-head{
+      display:flex;justify-content:space-between;align-items:center;gap:12px;
+      padding:12px 14px;background:#fbfdff;border-bottom:1px solid var(--line)
+    }
+    .panel-title{font-size:16px;font-weight:800}
+    .panel-sub{font-size:12px;color:var(--sub)}
+    .panel-body{padding:14px}
+
+    .grid-4,.grid-3,.grid-2{display:grid;gap:12px}
+    .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+    .field{
+      background:var(--panel-soft);border:1px solid var(--line);border-radius:12px;padding:10px
+    }
+    .field label,.fieldset-title{
+      display:block;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--sub)
+    }
+    .field label{cursor:help}
+    .field input,.field select,.field textarea{
+      width:100%;padding:8px 10px;border:1px solid #cfd9e5;border-radius:10px;background:#fff;
+      font-size:13px;color:var(--text);outline:none
+    }
+    .field textarea{min-height:82px;resize:vertical}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blue)}
+    .field-note{margin-top:6px;font-size:11px;color:var(--muted)}
+
+    .fieldset{margin-top:14px}
+    .fieldset:first-child{margin-top:0}
+    .fieldset-title-row{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px
+    }
+    .mini-btn{
+      display:inline-flex;align-items:center;justify-content:center;height:30px;padding:0 12px;border-radius:999px;
+      border:1px solid var(--line);background:#fff;font-size:12px;font-weight:700;color:var(--blue);cursor:pointer
+    }
+    .mini-btn.danger{color:var(--red)}
+
+    .repeat-list{display:flex;flex-direction:column;gap:10px}
+    .repeat-row{
+      background:var(--panel-soft);border:1px solid var(--line);border-radius:12px;padding:10px
+    }
+    .repeat-row-head{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px
+    }
+    .repeat-row-title{font-size:12px;font-weight:800;color:var(--sub)}
+
+    .status-bar{
+      position:sticky;bottom:0;margin-top:16px;padding:12px 14px;background:rgba(255,255,255,.94);
+      border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+      display:flex;justify-content:space-between;align-items:center;gap:12px;backdrop-filter:blur(6px)
+    }
+    .status-msg{font-size:12px;color:var(--sub)}
+    .status-msg.ok{color:var(--blue-dark)}
+    .switch{
+      display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--sub)
+    }
+    .switch input{width:16px;height:16px}
+
+    @media (max-width:1080px){
+      .layout,.grid-4,.grid-3{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:720px){
+      .layout,.grid-4,.grid-3,.grid-2{grid-template-columns:1fr}
+      .status-bar{flex-direction:column;align-items:stretch}
+    }
+    :is([class*="card"],[class*="panel"],[class*="item"],[class*="box"],[class*="road"],[class*="scroll"],.field,.repeat-row,.subblock,.sticky,.modal){
+      border-radius:0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title-wrap">
+        <h1>财务部数据看板编辑</h1>
+        <p>通过表单直接维护财务看板展示数据，保存后即可同步更新“财务部数据看板”。</p>
+      </div>
+      <div class="top-actions">
+        <div class="save-tip">当前数据来源：<strong>本地已保存看板状态</strong></div>
+        <a class="btn" href="./财务部数据看板.html" target="_blank" rel="noopener noreferrer">查看看板</a>
+        <button class="btn btn-primary" type="button" id="save-top-btn">保存</button>
+      </div>
+    </div>
+
+    <form id="finance-editor-form">
+      <div id="app"></div>
+    </form>
+
+    <div class="status-bar">
+      <div id="status-msg" class="status-msg">未保存修改。</div>
+      <div class="top-actions">
+        <button class="btn" type="button" id="reset-btn">恢复默认</button>
+        <button class="btn btn-primary" type="button" id="save-bottom-btn">保存并更新看板</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="./dashboard-sync.js"></script>
+  <script>
+    const defaultProfitData = {
+      revenue: { value: 286, yoyChange: 12.5, momChange: 8.3, targetRate: 95 },
+      netProfit: { value: 68, rate: 23.8 },
+      grossProfit: { value: 142, cost: 144, rate: 49.7 }
+    };
+
+    const defaultCashFlowData = {
+      available: 156,
+      inflow: 185,
+      outflow: 162,
+      netFlow: 23,
+      forecast: { hasGap: false, months: 3.2, nextMonthIn: 150, nextMonthOut: 145 }
+    };
+
+    const defaultReceivableData = {
+      total: 428,
+      overdue: {
+        amount: 86,
+        rate: 20.1,
+        customers: [
+          { name: "东方锅炉", amount: 35, days: 45 },
+          { name: "中车风电", amount: 28, days: 32 },
+          { name: "华能集团", amount: 15, days: 15 }
+        ]
+      },
+      collection: { target: 200, actual: 158, rate: 79, received: 120, pending: 38, overdueAmount: 42 }
+    };
+
+    const defaultCostData = {
+      laborCost: { value: 98, rate: 34.3 },
+      serviceCost: { value: 46, rate: 16.1 },
+      periodCost: { rent: 18, office: 8, tax: 24 },
+      budget: { actual: 194, budget: 210, status: "save", diff: 16 }
+    };
+
+    const defaultTaxData = {
+      vat: { amount: 28, rate: 9.8, status: "已申报" },
+      income: { amount: 15, rate: 5.2, status: "已申报" },
+      risks: ["进项发票不足", "部分费用无发票"],
+      invoiceIssued: 320,
+      invoiceReceived: 186
+    };
+
+    const defaultRiskData = [
+      { level: "high", title: "大额逾期应收款", desc: "东方锅炉逾期45天，金额35万元，需重点跟进" },
+      { level: "medium", title: "资金缺口预警", desc: "下月预计流入150万，流出145万，资金基本平衡" },
+      { level: "low", title: "费用控制良好", desc: "本期费用194万，预算210万，节约16万元" },
+      { level: "medium", title: "核心收入波动", desc: "环比增长8.3%，同比增12.5%，整体向好" }
+    ];
+
+    const defaultRiskSummary = [
+      { category: "应收", summary: "应收与现金节奏需持续盯防", level: "严重" }
+    ];
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function formatNow() {
+      const now = new Date();
+      const pad = (num) => String(num).padStart(2, "0");
+      return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    }
+
+    function normalizeRiskLevel(level) {
+      if (level === "medium") return "mid";
+      return level || "low";
+    }
+
+    function defaults() {
+      return {
+        profitData: deepClone(defaultProfitData),
+        cashFlowData: deepClone(defaultCashFlowData),
+        receivableData: deepClone(defaultReceivableData),
+        costData: deepClone(defaultCostData),
+        taxData: deepClone(defaultTaxData),
+        riskData: deepClone(defaultRiskData),
+        riskSummary: deepClone(defaultRiskSummary),
+        updateTime: formatNow(),
+        fileName: "表单编辑保存"
+      };
+    }
+
+    function buildFinanceIndexSource(pageState) {
+      return {
+        key: "finance",
+        updateTime: pageState.updateTime,
+        fileName: pageState.fileName,
+        riskSummary: pageState.riskSummary,
+        profitData: pageState.profitData,
+        cashFlowData: pageState.cashFlowData,
+        receivableData: pageState.receivableData,
+        costData: pageState.costData,
+        taxData: pageState.taxData,
+        riskData: pageState.riskData.map((item) => ({
+          ...item,
+          level: normalizeRiskLevel(item.level)
+        }))
+      };
+    }
+
+    function num(value, fallback = 0) {
+      const normalized = Number(String(value ?? "").trim());
+      return Number.isFinite(normalized) ? normalized : fallback;
+    }
+
+    function text(value, fallback = "") {
+      const normalized = String(value ?? "").trim();
+      return normalized || fallback;
+    }
+
+    const app = document.getElementById("app");
+    const statusMsg = document.getElementById("status-msg");
+    let currentState = window.DashboardSync
+      ? window.DashboardSync.getStoredPageState("finance", defaults())
+      : defaults();
+
+    function panel(title, subtitle, body, full = false) {
+      return `<section class="panel${full ? " full" : ""}">
+        <div class="panel-head">
+          <div>
+            <div class="panel-title">${title}</div>
+            <div class="panel-sub">${subtitle}</div>
+          </div>
+        </div>
+        <div class="panel-body">${body}</div>
+      </section>`;
+    }
+
+    function inputField(label, id, value, type = "number", note = "") {
+      return `<div class="field">
+        <label for="${id}">${label}</label>
+        <input id="${id}" type="${type}" value="${type === "number" ? num(value) : String(value ?? "")}">
+        ${note ? `<div class="field-note">${note}</div>` : ""}
+      </div>`;
+    }
+
+    function selectField(label, id, value, options) {
+      return `<div class="field">
+        <label for="${id}">${label}</label>
+        <select id="${id}">
+          ${options.map((option) => `<option value="${option.value}"${option.value === value ? " selected" : ""}>${option.label}</option>`).join("")}
+        </select>
+      </div>`;
+    }
+
+    function renderCustomers(items) {
+      return `<div class="repeat-list" data-list="customers">
+        ${items.map((item, index) => `
+          <div class="repeat-row" data-index="${index}">
+            <div class="repeat-row-head">
+              <div class="repeat-row-title">客户 ${index + 1}</div>
+              <button class="mini-btn danger" type="button" data-remove="customers" data-index="${index}">删除</button>
+            </div>
+            <div class="grid-3">
+              ${inputField("客户名称", `customer-name-${index}`, item.name, "text")}
+              ${inputField("逾期金额（万）", `customer-amount-${index}`, item.amount)}
+              ${inputField("逾期天数", `customer-days-${index}`, item.days)}
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function renderTaxRisks(items) {
+      return `<div class="repeat-list" data-list="tax-risks">
+        ${items.map((item, index) => `
+          <div class="repeat-row" data-index="${index}">
+            <div class="repeat-row-head">
+              <div class="repeat-row-title">涉税风险 ${index + 1}</div>
+              <button class="mini-btn danger" type="button" data-remove="tax-risks" data-index="${index}">删除</button>
+            </div>
+            <div class="field">
+              <label for="tax-risk-${index}">风险内容</label>
+              <input id="tax-risk-${index}" type="text" value="${item}">
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function renderWarningRisks(items) {
+      return `<div class="repeat-list" data-list="warning-risks">
+        ${items.map((item, index) => `
+          <div class="repeat-row" data-index="${index}">
+            <div class="repeat-row-head">
+              <div class="repeat-row-title">风险卡片 ${index + 1}</div>
+              <button class="mini-btn danger" type="button" data-remove="warning-risks" data-index="${index}">删除</button>
+            </div>
+            <div class="grid-3">
+              ${selectField("等级", `warning-level-${index}`, item.level, [
+                { value: "high", label: "高" },
+                { value: "medium", label: "中" },
+                { value: "low", label: "低" }
+              ])}
+              ${inputField("标题", `warning-title-${index}`, item.title, "text")}
+              ${inputField("描述", `warning-desc-${index}`, item.desc, "text")}
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function renderRiskSummary(items) {
+      return `<div class="repeat-list" data-list="risk-summary">
+        ${items.map((item, index) => `
+          <div class="repeat-row" data-index="${index}">
+            <div class="repeat-row-head">
+              <div class="repeat-row-title">首页风险概述 ${index + 1}</div>
+              <button class="mini-btn danger" type="button" data-remove="risk-summary" data-index="${index}">删除</button>
+            </div>
+            <div class="grid-3">
+              ${inputField("风险类别", `summary-category-${index}`, item.category, "text")}
+              ${inputField("风险概述", `summary-text-${index}`, item.summary, "text")}
+              ${selectField("风险等级", `summary-level-${index}`, item.level, [
+                { value: "严重", label: "严重" },
+                { value: "一般", label: "一般" },
+                { value: "轻度", label: "轻度" }
+              ])}
+            </div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function plainText(value) {
+      return String(value ?? "").replace(/\s+/g, " ").trim();
+    }
+
+    function applyFieldTooltips() {
+      document.querySelectorAll(".field").forEach((fieldEl) => {
+        const labelEl = fieldEl.querySelector("label");
+        const controlEl = fieldEl.querySelector("input, select, textarea");
+        if (!labelEl || !controlEl) return;
+        const labelText = plainText(labelEl.textContent);
+        const panelTitle = plainText(fieldEl.closest(".panel")?.querySelector(".panel-title")?.textContent) || "当前编辑区";
+        const rowTitle = plainText(fieldEl.closest(".repeat-row")?.querySelector(".repeat-row-title")?.textContent);
+        const scopeParts = [panelTitle];
+        if (rowTitle) scopeParts.push(rowTitle);
+        const tooltip = `字段：${labelText}。位置：${scopeParts.join(" / ")}。用途：用于配置看板中“${panelTitle}”区域的对应显示内容。`;
+        fieldEl.title = tooltip;
+        labelEl.title = tooltip;
+        controlEl.title = tooltip;
+      });
+    }
+
+    function render() {
+      const state = currentState;
+      app.innerHTML = `<div class="layout">
+        ${panel("核心盈利指标", "对应看板中的核心盈利指标卡片", `
+          <div class="grid-4">
+            ${inputField("技术服务收入（万）", "revenue-value", state.profitData.revenue.value)}
+            ${inputField("收入同比变化（%）", "revenue-yoy", state.profitData.revenue.yoyChange)}
+            ${inputField("收入环比变化（%）", "revenue-mom", state.profitData.revenue.momChange)}
+            ${inputField("收入目标达成率（%）", "revenue-target", state.profitData.revenue.targetRate)}
+            ${inputField("净利润（万）", "net-profit-value", state.profitData.netProfit.value)}
+            ${inputField("净利润率（%）", "net-profit-rate", state.profitData.netProfit.rate)}
+            ${inputField("毛利（万）", "gross-profit-value", state.profitData.grossProfit.value)}
+            ${inputField("直接成本（万）", "gross-profit-cost", state.profitData.grossProfit.cost)}
+          </div>
+          <div class="fieldset">
+            <div class="grid-2">
+              ${inputField("毛利率（%）", "gross-profit-rate", state.profitData.grossProfit.rate)}
+            </div>
+          </div>
+        `)}
+
+        ${panel("现金流情况", "对应看板中的现金流状态卡片", `
+          <div class="grid-4">
+            ${inputField("可用资金（万）", "cash-available", state.cashFlowData.available)}
+            ${inputField("本期流入（万）", "cash-inflow", state.cashFlowData.inflow)}
+            ${inputField("本期流出（万）", "cash-outflow", state.cashFlowData.outflow)}
+            ${inputField("净现金流（万）", "cash-netflow", state.cashFlowData.netFlow)}
+          </div>
+          <div class="fieldset">
+            <div class="grid-4">
+              <div class="field">
+                <label class="switch"><input id="forecast-has-gap" type="checkbox"${state.cashFlowData.forecast.hasGap ? " checked" : ""}>是否存在资金缺口</label>
+                <div class="field-note">勾选后看板会显示资金缺口预警状态</div>
+              </div>
+              ${inputField("可支撑月份", "forecast-months", state.cashFlowData.forecast.months)}
+              ${inputField("下月预计流入（万）", "forecast-next-in", state.cashFlowData.forecast.nextMonthIn)}
+              ${inputField("下月预计流出（万）", "forecast-next-out", state.cashFlowData.forecast.nextMonthOut)}
+            </div>
+          </div>
+        `)}
+
+        ${panel("应收款管理", "总额、逾期客户与回款进度", `
+          <div class="grid-4">
+            ${inputField("应收总额（万）", "receivable-total", state.receivableData.total)}
+            ${inputField("逾期金额（万）", "receivable-overdue-amount", state.receivableData.overdue.amount)}
+            ${inputField("逾期率（%）", "receivable-overdue-rate", state.receivableData.overdue.rate)}
+            ${inputField("回款率（%）", "collection-rate", state.receivableData.collection.rate)}
+            ${inputField("回款目标（万）", "collection-target", state.receivableData.collection.target)}
+            ${inputField("回款实际（万）", "collection-actual", state.receivableData.collection.actual)}
+            ${inputField("已回款（万）", "collection-received", state.receivableData.collection.received)}
+            ${inputField("待回款（万）", "collection-pending", state.receivableData.collection.pending)}
+          </div>
+          <div class="fieldset">
+            <div class="grid-2">
+              ${inputField("逾期回款额（万）", "collection-overdue-amount", state.receivableData.collection.overdueAmount)}
+            </div>
+          </div>
+          <div class="fieldset">
+            <div class="fieldset-title-row">
+              <div class="fieldset-title">重点逾期客户</div>
+              <button class="mini-btn" type="button" data-add="customers">新增客户</button>
+            </div>
+            ${renderCustomers(state.receivableData.overdue.customers)}
+          </div>
+        `, true)}
+
+        ${panel("成本费用控制", "人力、服务、期间费用与预算执行", `
+          <div class="grid-4">
+            ${inputField("人工成本（万）", "cost-labor-value", state.costData.laborCost.value)}
+            ${inputField("人工成本占比（%）", "cost-labor-rate", state.costData.laborCost.rate)}
+            ${inputField("服务成本（万）", "cost-service-value", state.costData.serviceCost.value)}
+            ${inputField("服务成本占比（%）", "cost-service-rate", state.costData.serviceCost.rate)}
+            ${inputField("租金（万）", "cost-rent", state.costData.periodCost.rent)}
+            ${inputField("办公（万）", "cost-office", state.costData.periodCost.office)}
+            ${inputField("税费（万）", "cost-tax", state.costData.periodCost.tax)}
+            ${inputField("本期费用（万）", "budget-actual", state.costData.budget.actual)}
+            ${inputField("预算费用（万）", "budget-budget", state.costData.budget.budget)}
+            ${selectField("预算状态", "budget-status", state.costData.budget.status, [
+              { value: "save", label: "节约" },
+              { value: "over", label: "超支" }
+            ])}
+            ${inputField("预算差额（万）", "budget-diff", state.costData.budget.diff)}
+          </div>
+        `)}
+
+        ${panel("税务管理", "税负、开票收票与涉税风险", `
+          <div class="grid-4">
+            ${inputField("增值税（万）", "tax-vat-amount", state.taxData.vat.amount)}
+            ${inputField("增值税税负率（%）", "tax-vat-rate", state.taxData.vat.rate)}
+            ${inputField("所得税（万）", "tax-income-amount", state.taxData.income.amount)}
+            ${inputField("所得税税负率（%）", "tax-income-rate", state.taxData.income.rate)}
+            ${inputField("开票金额（万）", "tax-invoice-issued", state.taxData.invoiceIssued)}
+            ${inputField("收票金额（万）", "tax-invoice-received", state.taxData.invoiceReceived)}
+            ${inputField("增值税状态", "tax-vat-status", state.taxData.vat.status || "已申报", "text")}
+            ${inputField("所得税状态", "tax-income-status", state.taxData.income.status || "已申报", "text")}
+          </div>
+          <div class="fieldset">
+            <div class="fieldset-title-row">
+              <div class="fieldset-title">涉税风险</div>
+              <button class="mini-btn" type="button" data-add="tax-risks">新增风险</button>
+            </div>
+            ${renderTaxRisks(state.taxData.risks)}
+          </div>
+        `)}
+
+        ${panel("风险预警卡片", "对应看板右侧的关键风险预警列表", `
+          <div class="fieldset-title-row">
+            <div class="fieldset-title">风险预警项</div>
+            <button class="mini-btn" type="button" data-add="warning-risks">新增预警项</button>
+          </div>
+          ${renderWarningRisks(state.riskData)}
+        `, true)}
+
+        ${panel("首页风险概述", "对应首页财务卡片右上角状态提示", `
+          <div class="fieldset-title-row">
+            <div class="fieldset-title">风险概述项</div>
+            <button class="mini-btn" type="button" data-add="risk-summary">新增概述</button>
+          </div>
+          ${renderRiskSummary(state.riskSummary)}
+        `, true)}
+      </div>`;
+      applyFieldTooltips();
+    }
+
+    function collectState() {
+      return {
+        profitData: {
+          revenue: {
+            value: num(document.getElementById("revenue-value").value),
+            yoyChange: num(document.getElementById("revenue-yoy").value),
+            momChange: num(document.getElementById("revenue-mom").value),
+            targetRate: num(document.getElementById("revenue-target").value)
+          },
+          netProfit: {
+            value: num(document.getElementById("net-profit-value").value),
+            rate: num(document.getElementById("net-profit-rate").value)
+          },
+          grossProfit: {
+            value: num(document.getElementById("gross-profit-value").value),
+            cost: num(document.getElementById("gross-profit-cost").value),
+            rate: num(document.getElementById("gross-profit-rate").value)
+          }
+        },
+        cashFlowData: {
+          available: num(document.getElementById("cash-available").value),
+          inflow: num(document.getElementById("cash-inflow").value),
+          outflow: num(document.getElementById("cash-outflow").value),
+          netFlow: num(document.getElementById("cash-netflow").value),
+          forecast: {
+            hasGap: document.getElementById("forecast-has-gap").checked,
+            months: num(document.getElementById("forecast-months").value),
+            nextMonthIn: num(document.getElementById("forecast-next-in").value),
+            nextMonthOut: num(document.getElementById("forecast-next-out").value)
+          }
+        },
+        receivableData: {
+          total: num(document.getElementById("receivable-total").value),
+          overdue: {
+            amount: num(document.getElementById("receivable-overdue-amount").value),
+            rate: num(document.getElementById("receivable-overdue-rate").value),
+            customers: Array.from(document.querySelectorAll('[data-list="customers"] .repeat-row')).map((row, index) => ({
+              name: text(document.getElementById(`customer-name-${index}`).value),
+              amount: num(document.getElementById(`customer-amount-${index}`).value),
+              days: num(document.getElementById(`customer-days-${index}`).value)
+            })).filter((item) => item.name || item.amount || item.days)
+          },
+          collection: {
+            target: num(document.getElementById("collection-target").value),
+            actual: num(document.getElementById("collection-actual").value),
+            rate: num(document.getElementById("collection-rate").value),
+            received: num(document.getElementById("collection-received").value),
+            pending: num(document.getElementById("collection-pending").value),
+            overdueAmount: num(document.getElementById("collection-overdue-amount").value)
+          }
+        },
+        costData: {
+          laborCost: {
+            value: num(document.getElementById("cost-labor-value").value),
+            rate: num(document.getElementById("cost-labor-rate").value)
+          },
+          serviceCost: {
+            value: num(document.getElementById("cost-service-value").value),
+            rate: num(document.getElementById("cost-service-rate").value)
+          },
+          periodCost: {
+            rent: num(document.getElementById("cost-rent").value),
+            office: num(document.getElementById("cost-office").value),
+            tax: num(document.getElementById("cost-tax").value)
+          },
+          budget: {
+            actual: num(document.getElementById("budget-actual").value),
+            budget: num(document.getElementById("budget-budget").value),
+            status: text(document.getElementById("budget-status").value, "save"),
+            diff: num(document.getElementById("budget-diff").value)
+          }
+        },
+        taxData: {
+          vat: {
+            amount: num(document.getElementById("tax-vat-amount").value),
+            rate: num(document.getElementById("tax-vat-rate").value),
+            status: text(document.getElementById("tax-vat-status").value, "已申报")
+          },
+          income: {
+            amount: num(document.getElementById("tax-income-amount").value),
+            rate: num(document.getElementById("tax-income-rate").value),
+            status: text(document.getElementById("tax-income-status").value, "已申报")
+          },
+          invoiceIssued: num(document.getElementById("tax-invoice-issued").value),
+          invoiceReceived: num(document.getElementById("tax-invoice-received").value),
+          risks: Array.from(document.querySelectorAll('[data-list="tax-risks"] .repeat-row')).map((row, index) => text(document.getElementById(`tax-risk-${index}`).value)).filter(Boolean)
+        },
+        riskData: Array.from(document.querySelectorAll('[data-list="warning-risks"] .repeat-row')).map((row, index) => ({
+          level: text(document.getElementById(`warning-level-${index}`).value, "medium"),
+          title: text(document.getElementById(`warning-title-${index}`).value),
+          desc: text(document.getElementById(`warning-desc-${index}`).value)
+        })).filter((item) => item.title || item.desc),
+        riskSummary: Array.from(document.querySelectorAll('[data-list="risk-summary"] .repeat-row')).map((row, index) => ({
+          category: text(document.getElementById(`summary-category-${index}`).value),
+          summary: text(document.getElementById(`summary-text-${index}`).value),
+          level: text(document.getElementById(`summary-level-${index}`).value, "一般")
+        })).filter((item) => item.category || item.summary),
+        updateTime: formatNow(),
+        fileName: "表单编辑保存"
+      };
+    }
+
+    function addItem(type) {
+      currentState = collectState();
+      if (type === "customers") currentState.receivableData.overdue.customers.push({ name: "", amount: 0, days: 0 });
+      if (type === "tax-risks") currentState.taxData.risks.push("");
+      if (type === "warning-risks") currentState.riskData.push({ level: "medium", title: "", desc: "" });
+      if (type === "risk-summary") currentState.riskSummary.push({ category: "", summary: "", level: "一般" });
+      render();
+    }
+
+    function removeItem(type, index) {
+      currentState = collectState();
+      if (type === "customers") currentState.receivableData.overdue.customers.splice(index, 1);
+      if (type === "tax-risks") currentState.taxData.risks.splice(index, 1);
+      if (type === "warning-risks") currentState.riskData.splice(index, 1);
+      if (type === "risk-summary") currentState.riskSummary.splice(index, 1);
+      render();
+    }
+
+    function saveData() {
+      currentState = collectState();
+      if (!window.DashboardSync) {
+        statusMsg.textContent = "保存失败：未检测到同步组件。";
+        return;
+      }
+      window.DashboardSync.persistDepartment("finance", currentState, buildFinanceIndexSource(currentState));
+      statusMsg.textContent = `已保存，并同步更新财务部数据看板。更新时间：${currentState.updateTime}`;
+      statusMsg.className = "status-msg ok";
+    }
+
+    document.addEventListener("click", function (event) {
+      const addType = event.target.getAttribute("data-add");
+      const removeType = event.target.getAttribute("data-remove");
+      if (addType) {
+        addItem(addType);
+        return;
+      }
+      if (removeType) {
+        removeItem(removeType, num(event.target.getAttribute("data-index")));
+      }
+    });
+
+    document.getElementById("save-top-btn").addEventListener("click", saveData);
+    document.getElementById("save-bottom-btn").addEventListener("click", saveData);
+    document.getElementById("reset-btn").addEventListener("click", function () {
+      currentState = defaults();
+      render();
+      statusMsg.textContent = "已恢复默认数据，请记得保存。";
+      statusMsg.className = "status-msg";
+    });
+
+    render();
+  </script>
+  <script>
+    (function(){
+      const statusEl=document.getElementById("status-msg");
+      ["save-top-btn","save-bottom-btn"].forEach((id)=>{
+        const btn=document.getElementById(id);
+        if(!btn) return;
+        btn.addEventListener("click",function(){
+          setTimeout(function(){
+            const text=(statusEl?.textContent||"").trim();
+            alert(/已保存|已同步|更新时间/.test(text)?"保存成功":"保存失败，请重试");
+          },0);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

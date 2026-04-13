@@ -837,14 +837,31 @@
         }
 
         .card-header {
-            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 56px !important;
+            padding: 8px 12px !important;
             background: #fbfdff !important;
         }
 
+        .card-header>div:first-child {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            min-height: 38px !important;
+            gap: 2px !important;
+        }
+
         .card-title {
+            display: block !important;
             font-size: 13px !important;
+            line-height: 17px !important;
             font-weight: 700 !important;
             gap: 0 !important;
+            margin: 0 !important;
         }
 
         .card-title .icon {
@@ -881,6 +898,20 @@
         .table-title,
         .table-subtitle {
             font-size: 10px !important;
+        }
+
+        .card-subtitle {
+            display: block !important;
+            width: 100% !important;
+            min-height: auto !important;
+            color: var(--text-muted) !important;
+            line-height: 1.32 !important;
+            margin: 0 !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
         }
 
         .metric-card .metric-value {
@@ -1253,11 +1284,37 @@
             color:var(--primary-color) !important;
             opacity:1 !important;
         }
+        .metric-card .metric-label,
+        .metric-card .metric-detail,
+        .metric-card .metric-badge,
+        .metric-card .metric-value,
+        .metric-card .metric-value .unit,
+        .stat-card .stat-label,
+        .stat-card .stat-value,
+        .stat-card .stat-unit,
+        .stat-card .stat-trend{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
+        .stat-card.blue .stat-label,.stat-card.blue .stat-value,.stat-card.blue .stat-unit,.stat-card.blue .stat-trend,
+        .stat-card.cyan .stat-label,.stat-card.cyan .stat-value,.stat-card.cyan .stat-unit,.stat-card.cyan .stat-trend,
+        .stat-card.emerald .stat-label,.stat-card.emerald .stat-value,.stat-card.emerald .stat-unit,.stat-card.emerald .stat-trend,
+        .stat-card.amber .stat-label,.stat-card.amber .stat-value,.stat-card.amber .stat-unit,.stat-card.amber .stat-trend,
+        .stat-card.rose .stat-label,.stat-card.rose .stat-value,.stat-card.rose .stat-unit,.stat-card.rose .stat-trend,
+        .stat-card.purple .stat-label,.stat-card.purple .stat-value,.stat-card.purple .stat-unit,.stat-card.purple .stat-trend,
+        .tax-item .tax-name,.tax-item .tax-status,.tax-item .status-tag,
+        .payment-status-item{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
         .fund-warning.safe{background:var(--primary-soft)!important;border-color:var(--primary-soft-strong)!important}
         .fund-warning.safe .warning-title{color:var(--primary-color)!important}
         .progress-bar .progress-fill.green{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
         .payment-status-item .dot.green{background:var(--primary-color)!important}
         .risk-item.low{background:var(--primary-soft)!important;border-left-color:var(--primary-color)!important}
+        :is([class*="card"], [class*="panel"], [class*="item"], [class*="box"], [class*="road"], [class*="scroll"], .field, .repeat-row, .subblock, .sticky, .modal) {
+            border-radius: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -1270,9 +1327,10 @@
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <!-- SheetJS -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./dashboard-sync.js"></script>
 
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useRef, useEffect } = React;
 
         // 默认核心盈利数据
         const defaultProfitData = {
@@ -1364,6 +1422,52 @@
             { level: 'medium', title: '核心收入波动', desc: '环比增长8.3%，同比增12.5%，整体向好' }
         ];
 
+        const defaultRiskSummary = [
+            { category: '应收', summary: '应收与现金节奏需持续盯防', level: '严重' }
+        ];
+
+        const formatNow = () => {
+            const now = new Date();
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}时${pad(now.getMinutes())}分`;
+        };
+
+        const normalizeRiskLevel = (level) => {
+            if (level === 'medium') return 'mid';
+            return level || 'low';
+        };
+
+        const parseRiskSummarySheet = (workbook, getSheetName, toText) => {
+            const riskSummarySheetName = getSheetName(workbook, ['风险概述']);
+            if (!riskSummarySheetName) return null;
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[riskSummarySheetName], { defval: '' });
+            const items = rows
+                .filter((row) => toText(row['风险类别']) || toText(row['风险概述']))
+                .map((row) => ({
+                    category: toText(row['风险类别']),
+                    summary: toText(row['风险概述']),
+                    level: toText(row['风险等级'], '一般')
+                }))
+                .filter((item) => item.category || item.summary);
+            return items.length > 0 ? items : null;
+        };
+
+        const buildFinanceIndexSource = ({ profitData, cashFlowData, receivableData, costData, taxData, riskData, riskSummary, updateTime, fileName }) => ({
+            key: 'finance',
+            updateTime,
+            fileName,
+            riskSummary,
+            profitData,
+            cashFlowData,
+            receivableData,
+            costData,
+            taxData,
+            riskData: riskData.map((item) => ({
+                ...item,
+                level: normalizeRiskLevel(item.level)
+            }))
+        });
+
         // 核心盈利指标卡片
         const ProfitCard = ({ data }) => {
             const getBadgeClass = (change) => {
@@ -1375,11 +1479,13 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">💰</span>
-                            核心盈利指标
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">💰</span>
+                                核心盈利指标
+                            </div>
+                            <div className="card-subtitle">展示本期收入、利润与毛利核心结果</div>
                         </div>
-                        <span className="card-subtitle">本期数据</span>
                     </div>
                     <div className="card-body">
                         <div className="metric-card">
@@ -1432,9 +1538,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">💵</span>
-                            现金流状况
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">💵</span>
+                                现金流状况
+                            </div>
+                            <div className="card-subtitle">展示可用资金、净流量与资金预警</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1471,9 +1580,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📋</span>
-                            应收款管理
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📋</span>
+                                应收款管理
+                            </div>
+                            <div className="card-subtitle">展示应收、逾期客户与回款进度</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1551,9 +1663,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📊</span>
-                            成本费用控制
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📊</span>
+                                成本费用控制
+                            </div>
+                            <div className="card-subtitle">展示成本构成、费用和预算执行</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1618,9 +1733,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📑</span>
-                            税务管理
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📑</span>
+                                税务管理
+                            </div>
+                            <div className="card-subtitle">展示税负、票据与涉税风险</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1674,9 +1792,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">🚨</span>
-                            关键风险预警
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">🚨</span>
+                                关键风险预警
+                            </div>
+                            <div className="card-subtitle">展示当前财务重点风险与处理提示</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1700,19 +1821,28 @@
 
         // 主应用组件
         const App = () => {
-            const [profitData, setProfitData] = useState(defaultProfitData);
-            const [cashFlowData, setCashFlowData] = useState(defaultCashFlowData);
-            const [receivableData, setReceivableData] = useState(defaultReceivableData);
-            const [costData, setCostData] = useState(defaultCostData);
-            const [taxData, setTaxData] = useState(defaultTaxData);
-            const [riskData, setRiskData] = useState(defaultRiskData);
-            const [fileName, setFileName] = useState('');
+            const persistedState = window.DashboardSync?.getStoredPageState('finance', {
+                profitData: defaultProfitData,
+                cashFlowData: defaultCashFlowData,
+                receivableData: defaultReceivableData,
+                costData: defaultCostData,
+                taxData: defaultTaxData,
+                riskData: defaultRiskData,
+                riskSummary: defaultRiskSummary,
+                updateTime: formatNow(),
+                fileName: ''
+            }) || {};
+
+            const [profitData, setProfitData] = useState(persistedState.profitData || defaultProfitData);
+            const [cashFlowData, setCashFlowData] = useState(persistedState.cashFlowData || defaultCashFlowData);
+            const [receivableData, setReceivableData] = useState(persistedState.receivableData || defaultReceivableData);
+            const [costData, setCostData] = useState(persistedState.costData || defaultCostData);
+            const [taxData, setTaxData] = useState(persistedState.taxData || defaultTaxData);
+            const [riskData, setRiskData] = useState(persistedState.riskData || defaultRiskData);
+            const [riskSummary, setRiskSummary] = useState(persistedState.riskSummary || defaultRiskSummary);
+            const [fileName, setFileName] = useState(persistedState.fileName || '');
+            const [updateTime, setUpdateTime] = useState(persistedState.updateTime || formatNow());
             const fileInputRef = useRef(null);
-            const updateTime = (() => {
-                const now = new Date();
-                const pad = (num) => String(num).padStart(2, '0');
-                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
-            })();
 
             const getSheetName = (workbook, candidates) => candidates.find((name) => workbook.SheetNames.includes(name));
             const toNumber = (value, fallback = 0) => {
@@ -1723,6 +1853,59 @@
                 if (value === null || value === undefined) return fallback;
                 const text = String(value).trim();
                 return text || fallback;
+            };
+
+            const applyFinancePageState = (nextState) => {
+                if (!nextState) return;
+                setProfitData(nextState.profitData || defaultProfitData);
+                setCashFlowData(nextState.cashFlowData || defaultCashFlowData);
+                setReceivableData(nextState.receivableData || defaultReceivableData);
+                setCostData(nextState.costData || defaultCostData);
+                setTaxData(nextState.taxData || defaultTaxData);
+                setRiskData(nextState.riskData || defaultRiskData);
+                setRiskSummary(nextState.riskSummary || defaultRiskSummary);
+                setFileName(nextState.fileName || '');
+                setUpdateTime(nextState.updateTime || formatNow());
+            };
+
+            useEffect(() => {
+                if (!window.DashboardSync) return;
+                const pageState = {
+                    profitData,
+                    cashFlowData,
+                    receivableData,
+                    costData,
+                    taxData,
+                    riskData,
+                    riskSummary,
+                    updateTime,
+                    fileName
+                };
+                window.DashboardSync.persistDepartment(
+                    'finance',
+                    pageState,
+                    buildFinanceIndexSource(pageState)
+                );
+            }, [profitData, cashFlowData, receivableData, costData, taxData, riskData, riskSummary, updateTime, fileName]);
+
+            useEffect(() => {
+                const handleStorageSync = (event) => {
+                    if (!event.key || event.key !== 'zuozhanshi_v6_dashboard:page:finance') return;
+                    if (!window.DashboardSync) return;
+                    const latestState = window.DashboardSync.getStoredPageState('finance', null);
+                    if (latestState) {
+                        applyFinancePageState(latestState);
+                    }
+                };
+
+                window.addEventListener('storage', handleStorageSync);
+                return () => {
+                    window.removeEventListener('storage', handleStorageSync);
+                };
+            }, []);
+
+            const openFinanceEditor = () => {
+                window.open('./财务部数据看板-编辑.html', '_blank', 'noopener,noreferrer');
             };
 
             const handleFileUpload = (e) => {
@@ -1886,6 +2069,13 @@
                             })));
                         }
 
+                        const parsedRiskSummary = parseRiskSummarySheet(workbook, getSheetName, toText);
+                        if (parsedRiskSummary) {
+                            setRiskSummary(parsedRiskSummary);
+                        }
+
+                        setUpdateTime(formatNow());
+
                     } catch (error) {
                         console.error('解析Excel失败:', error);
                         alert('解析Excel文件失败，请检查文件格式');
@@ -1903,6 +2093,14 @@
                             <span>更新时间：<strong>{updateTime}</strong></span>
                         </div>
                         <div className="actions">
+                            <button
+                                type="button"
+                                className="btn btn-outline"
+                                onClick={openFinanceEditor}
+                            >
+                                <span>✎</span>
+                                编辑
+                            </button>
                             <a
                                 className="btn btn-outline"
                                 href="../作战室数据导入模板/财务部-数据导入模板V2.xlsx"

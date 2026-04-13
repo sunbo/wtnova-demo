@@ -604,18 +604,50 @@
         }
 
         .card-header {
-            padding: 10px 12px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            min-height: 56px !important;
+            padding: 8px 12px !important;
             background: #fbfdff !important;
         }
 
+        .card-header>div:first-child {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            align-items: flex-start !important;
+            width: 100% !important;
+            min-height: 38px !important;
+            gap: 2px !important;
+        }
+
         .card-title {
+            display: block !important;
             font-size: 13px !important;
+            line-height: 17px !important;
             font-weight: 700 !important;
             gap: 0 !important;
+            margin: 0 !important;
         }
 
         .card-title .icon {
             display: none !important;
+        }
+
+        .card-subtitle {
+            display: block !important;
+            width: 100% !important;
+            min-height: auto !important;
+            font-size: 10px !important;
+            color: var(--text-muted) !important;
+            line-height: 1.32 !important;
+            margin: 0 !important;
+            white-space: normal !important;
+            overflow: hidden !important;
+            display: -webkit-box !important;
+            -webkit-box-orient: vertical !important;
+            -webkit-line-clamp: 2 !important;
         }
 
         .card-body {
@@ -1184,8 +1216,37 @@
         .stat-item.purple,.stat-item.cyan,.stat-item.emerald,.stat-item.blue{background:linear-gradient(135deg,var(--primary-color) 0%,var(--primary-dark) 100%) !important}
         .tag-purple,.tag-cyan,.tag-emerald{background:var(--primary-soft)!important;color:var(--primary-color)!important}
         .bar-fill.green,.bar-fill.amber{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+        .stat-item .stat-label,
+        .stat-item .stat-value,
+        .stat-item .stat-unit,
+        .summary-item .label,
+        .summary-item .value,
+        .summary-item .value.danger,
+        .summary-item .value.success{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
+        .stat-item.purple .stat-value,
+        .stat-item.cyan .stat-value,
+        .stat-item.emerald .stat-value,
+        .stat-item.amber .stat-value,
+        .stat-item.rose .stat-value,
+        .stat-item.blue .stat-value,
+        .summary-item .value,
+        .summary-item .value.success,
+        .summary-item .value.danger,
+        .mini-summary-item .value,
+        .mini-summary-item .value.green,
+        .mini-summary-item .value.amber,
+        .mini-summary-item .value.red{
+            color:var(--text-primary) !important;
+            opacity:1 !important;
+        }
         .stacked-current{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
         .funnel-fill,.funnel-fill.step-2,.funnel-fill.step-3,.funnel-fill.step-4,.funnel-fill.step-5,.funnel-fill.step-6{background:linear-gradient(90deg,var(--primary-color),var(--primary-light)) !important}
+        :is([class*="card"], [class*="panel"], [class*="item"], [class*="box"], [class*="road"], [class*="scroll"], .field, .repeat-row, .subblock, .sticky, .modal) {
+            border-radius: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -1198,9 +1259,10 @@
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <!-- SheetJS -->
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="./dashboard-sync.js"></script>
 
     <script type="text/babel">
-        const { useState, useRef } = React;
+        const { useState, useRef, useEffect } = React;
 
         // 默认招聘数据
         const defaultRecruitmentData = [
@@ -1235,6 +1297,41 @@
             { department: '综合管理部', totalPositions: 8, currentStaff: 7, vacant: 1 },
             { department: '财务部', totalPositions: 6, currentStaff: 5, vacant: 1 },
         ];
+
+        const defaultRiskSummary = [
+            { category: '人力', summary: '在编稳定，但关键岗位招聘推进偏慢', level: '严重' }
+        ];
+
+        const formatNow = () => {
+            const now = new Date();
+            const pad = (num) => String(num).padStart(2, '0');
+            return `${now.getFullYear()}年${pad(now.getMonth() + 1)}月${pad(now.getDate())}日 ${pad(now.getHours())}时${pad(now.getMinutes())}分`;
+        };
+
+        const parseRiskSummarySheet = (workbook) => {
+            const riskSheet = workbook.Sheets['风险概述'];
+            if (!riskSheet) return null;
+            const rows = XLSX.utils.sheet_to_json(riskSheet, { defval: '' });
+            const items = rows
+                .filter((row) => String(row['风险类别'] || '').trim() || String(row['风险概述'] || '').trim())
+                .map((row) => ({
+                    category: String(row['风险类别'] || '').trim(),
+                    summary: String(row['风险概述'] || '').trim(),
+                    level: String(row['风险等级'] || '一般').trim()
+                }))
+                .filter((item) => item.category || item.summary);
+            return items.length > 0 ? items : null;
+        };
+
+        const buildHrIndexSource = ({ recruitmentData, employeeRelationsData, departmentData, riskSummary, updateTime, fileName }) => ({
+            key: 'hr',
+            updateTime,
+            fileName,
+            recruitmentData,
+            employeeRelationsData,
+            departmentData,
+            riskSummary
+        });
 
         // 解析Excel数据
         const parseExcelData = (data) => {
@@ -1317,9 +1414,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">👥</span>
-                            员工关系
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">👥</span>
+                                员工关系
+                            </div>
+                            <div className="card-subtitle">展示在编、入转离及合同续签等情况</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1358,9 +1458,12 @@
             return (
                 <div className="card">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">🏢</span>
-                            部门人力概览
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">🏢</span>
+                                部门人力概览
+                            </div>
+                            <div className="card-subtitle">展示编制、在岗与部门缺口分布</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1419,9 +1522,12 @@
             return (
                 <div className="card full-width">
                     <div className="card-header">
-                        <div className="card-title">
-                            <span className="icon">📊</span>
-                            招聘看板
+                        <div>
+                            <div className="card-title">
+                                <span className="icon">📊</span>
+                                招聘看板
+                            </div>
+                            <div className="card-subtitle">展示招聘漏斗与岗位推进进度</div>
                         </div>
                     </div>
                     <div className="card-body">
@@ -1501,7 +1607,10 @@
             return (
                 <div className="card balanced-card">
                     <div className="card-header">
-                        <div className="card-title">员工关系</div>
+                        <div>
+                            <div className="card-title">员工关系</div>
+                            <div className="card-subtitle">展示在编、入转离及合同续签等情况</div>
+                        </div>
                     </div>
                     <div className="card-body balanced-body">
                         <div className="bi-grid-2 balanced-content">
@@ -1579,7 +1688,10 @@
             return (
                 <div className="card balanced-card">
                     <div className="card-header">
-                        <div className="card-title">部门人力概览</div>
+                        <div>
+                            <div className="card-title">部门人力概览</div>
+                            <div className="card-subtitle">展示编制、在岗与部门缺口分布</div>
+                        </div>
                     </div>
                     <div className="card-body balanced-body">
                         <div className="mini-summary">
@@ -1674,7 +1786,10 @@
             return (
                 <div className="card full-width">
                     <div className="card-header">
-                        <div className="card-title">招聘看板</div>
+                        <div>
+                            <div className="card-title">招聘看板</div>
+                            <div className="card-subtitle">展示招聘漏斗与岗位推进进度</div>
+                        </div>
                     </div>
                     <div className="card-body">
                         <div className="mini-summary">
@@ -1791,16 +1906,51 @@
         };
 
         const App = () => {
-            const [recruitmentData, setRecruitmentData] = useState(defaultRecruitmentData);
-            const [employeeRelationsData, setEmployeeRelationsData] = useState(defaultEmployeeRelationsData);
-            const [departmentData, setDepartmentData] = useState(defaultDepartmentData);
-            const [fileName, setFileName] = useState('');
+            const persistedState = window.DashboardSync?.getStoredPageState('hr', {
+                recruitmentData: defaultRecruitmentData,
+                employeeRelationsData: defaultEmployeeRelationsData,
+                departmentData: defaultDepartmentData,
+                riskSummary: defaultRiskSummary,
+                updateTime: formatNow(),
+                fileName: ''
+            }) || {};
+
+            const [recruitmentData, setRecruitmentData] = useState(persistedState.recruitmentData || defaultRecruitmentData);
+            const [employeeRelationsData, setEmployeeRelationsData] = useState(persistedState.employeeRelationsData || defaultEmployeeRelationsData);
+            const [departmentData, setDepartmentData] = useState(persistedState.departmentData || defaultDepartmentData);
+            const [riskSummary, setRiskSummary] = useState(persistedState.riskSummary || defaultRiskSummary);
+            const [fileName, setFileName] = useState(persistedState.fileName || '');
+            const [updateTime, setUpdateTime] = useState(persistedState.updateTime || formatNow());
             const fileInputRef = useRef(null);
-            const updateTime = (() => {
-                const now = new Date();
-                const pad = (num) => String(num).padStart(2, '0');
-                return `${now.getFullYear()}\u5e74${pad(now.getMonth() + 1)}\u6708${pad(now.getDate())}\u65e5 ${pad(now.getHours())}\u65f6${pad(now.getMinutes())}\u5206`;
-            })();
+
+            useEffect(() => {
+                if (!window.DashboardSync) return;
+                const pageState = { recruitmentData, employeeRelationsData, departmentData, riskSummary, updateTime, fileName };
+                window.DashboardSync.persistDepartment('hr', pageState, buildHrIndexSource(pageState));
+            }, [recruitmentData, employeeRelationsData, departmentData, riskSummary, updateTime, fileName]);
+
+            useEffect(() => {
+                const handleStorageSync = (event) => {
+                    if (!event.key || event.key !== 'zuozhanshi_v6_dashboard:page:hr' || !window.DashboardSync) return;
+                    const latestState = window.DashboardSync.getStoredPageState('hr', null);
+                    if (!latestState) return;
+                    setRecruitmentData(latestState.recruitmentData || defaultRecruitmentData);
+                    setEmployeeRelationsData(latestState.employeeRelationsData || defaultEmployeeRelationsData);
+                    setDepartmentData(latestState.departmentData || defaultDepartmentData);
+                    setRiskSummary(latestState.riskSummary || defaultRiskSummary);
+                    setFileName(latestState.fileName || '');
+                    setUpdateTime(latestState.updateTime || formatNow());
+                };
+
+                window.addEventListener('storage', handleStorageSync);
+                return () => {
+                    window.removeEventListener('storage', handleStorageSync);
+                };
+            }, []);
+
+            const openHrEditor = () => {
+                window.open('./人力资源详情-编辑.html', '_blank', 'noopener,noreferrer');
+            };
 
             const handleFileUpload = (e) => {
                 const file = e.target.files[0];
@@ -1831,6 +1981,13 @@
                         if (parsed.department.length > 0) {
                             setDepartmentData(parsed.department);
                         }
+
+                        const parsedRiskSummary = parseRiskSummarySheet(workbook);
+                        if (parsedRiskSummary) {
+                            setRiskSummary(parsedRiskSummary);
+                        }
+
+                        setUpdateTime(formatNow());
                     } catch (error) {
                         console.error('解析Excel失败:', error);
                         alert('解析Excel文件失败，请检查文件格式');
@@ -1850,6 +2007,14 @@
                             <span>更新时间：<strong>{updateTime}</strong></span>
                         </div>
                         <div className="actions">
+                            <button
+                                className="btn btn-outline"
+                                type="button"
+                                onClick={openHrEditor}
+                            >
+                                <span>✎</span>
+                                编辑
+                            </button>
                             <a
                                 className="btn btn-outline"
                                 href="../作战室数据导入模板/人力资源部-数据导入模板V2.xlsx"
@@ -1867,6 +2032,7 @@
                             />
                             <button
                                 className="btn btn-primary"
+                                type="button"
                                 onClick={() => fileInputRef.current.click()}
                             >
                                 <span>📤</span>
